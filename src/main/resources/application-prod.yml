@@ -19,6 +19,9 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: 6379
+  docker:
+    compose:
+      enabled: false
 
 springdoc:
   api-docs:
@@ -29,6 +32,7 @@ springdoc:
 logging:
   level:
     kr.solve: INFO
+
 
 cors:
   allowed-origins: ${CORS_ORIGINS}
