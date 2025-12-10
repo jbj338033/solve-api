@@ -25,6 +25,7 @@ import kr.solve.domain.user.domain.repository.UserActivityRepository
 import kr.solve.domain.user.domain.repository.UserRepository
 import kr.solve.global.error.BusinessException
 import kr.solve.global.security.userId
+import kr.solve.infra.judge.JudgeEvent
 import kr.solve.infra.judge.JudgeRequest
 import kr.solve.infra.judge.JudgeService
 import kr.solve.infra.judge.SubmissionEventPublisher
@@ -204,54 +205,70 @@ class SubmissionService(
             submissionRepository.updateStatus(submission.id, SubmissionStatus.JUDGING)
             submissionEventPublisher.publishUpdate(submission, problem, contest, user, SubmissionStatus.JUDGING)
 
-            val response =
-                judgeService.judge(
-                    JudgeRequest(
-                        submissionId = submission.id,
-                        language = request.language,
-                        code = request.code,
-                        timeLimit = problem.timeLimit,
-                        memoryLimit = problem.memoryLimit,
-                        testcases = testcases,
-                    ),
-                )
+            var finalResult: JudgeResult = JudgeResult.INTERNAL_ERROR
+            var finalScore = 0
+            var finalTime = 0
+            var finalMemory = 0
+            var finalError: String? = null
 
-            response.testcaseResults.forEach { tcResult ->
-                submissionResultRepository.save(
-                    SubmissionResult(
-                        submissionId = submission.id,
-                        testcaseId = tcResult.testcaseId,
-                        result = tcResult.result,
-                        timeUsed = tcResult.time,
-                        memoryUsed = tcResult.memory,
-                    ),
-                )
+            judgeService.judge(
+                JudgeRequest(
+                    submissionId = submission.id,
+                    language = request.language,
+                    code = request.code,
+                    timeLimit = problem.timeLimit,
+                    memoryLimit = problem.memoryLimit,
+                    testcases = testcases,
+                ),
+            ).collect { event ->
+                when (event) {
+                    is JudgeEvent.Progress -> {
+                        submissionResultRepository.save(
+                            SubmissionResult(
+                                submissionId = submission.id,
+                                testcaseId = event.testcaseId,
+                                result = event.result,
+                                timeUsed = event.time,
+                                memoryUsed = event.memory,
+                            ),
+                        )
+                        submissionEventPublisher.publishUpdate(
+                            submission, problem, contest, user,
+                            SubmissionStatus.JUDGING,
+                            score = event.score,
+                        )
+                    }
+                    is JudgeEvent.Complete -> {
+                        finalResult = event.result
+                        finalScore = event.score
+                        finalTime = event.time
+                        finalMemory = event.memory
+                        finalError = event.error
+                    }
+                }
             }
 
             submissionRepository.updateResult(
                 submission.id,
                 SubmissionStatus.COMPLETED,
-                response.result,
-                response.score,
-                response.time,
-                response.memory,
-                response.error,
+                finalResult,
+                finalScore,
+                finalTime,
+                finalMemory,
+                finalError,
             )
             submissionEventPublisher.publishUpdate(
-                submission,
-                problem,
-                contest,
-                user,
+                submission, problem, contest, user,
                 SubmissionStatus.COMPLETED,
-                response.result,
-                response.score,
-                response.time,
-                response.memory,
+                finalResult,
+                finalScore,
+                finalTime,
+                finalMemory,
             )
 
             val today = LocalDate.now()
             val isFirstAc =
-                response.result == JudgeResult.ACCEPTED &&
+                finalResult == JudgeResult.ACCEPTED &&
                     !submissionRepository.existsByUserIdAndProblemIdAndResult(
                         submission.userId,
                         submission.problemId,
@@ -279,10 +296,7 @@ class SubmissionService(
                 e.message,
             )
             submissionEventPublisher.publishUpdate(
-                submission,
-                problem,
-                contest,
-                user,
+                submission, problem, contest, user,
                 SubmissionStatus.COMPLETED,
                 JudgeResult.INTERNAL_ERROR,
                 0,
