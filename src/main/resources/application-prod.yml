@@ -1,0 +1,34 @@
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    pool:
+      initial-size: 10
+      max-size: 50
+
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+    user: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+logging:
+  level:
+    kr.solve: INFO
+
+cors:
+  allowed-origins: ${CORS_ORIGINS}
