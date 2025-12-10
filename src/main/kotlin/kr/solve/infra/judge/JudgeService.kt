@@ -62,7 +62,7 @@ class JudgeService(
                 }
             }
         } finally {
-            isolateExecutor.cleanupBox(boxId)
+            isolateExecutor.releaseBox(boxId)
         }
 
         val score = (results.count { it.result == JudgeResult.ACCEPTED } * 100) / request.testcases.size

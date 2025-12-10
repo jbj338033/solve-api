@@ -7,8 +7,10 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder
 import java.util.UUID
 
 suspend fun userId(): UUID =
+    userIdOrNull() ?: throw BusinessException(AuthError.INVALID_TOKEN)
+
+suspend fun userIdOrNull(): UUID? =
     ReactiveSecurityContextHolder
         .getContext()
         .mapNotNull { it.authentication?.principal as? UUID }
         .awaitSingleOrNull()
-        ?: throw BusinessException(AuthError.INVALID_TOKEN)

@@ -53,8 +53,20 @@ class IsolateExecutor(
         code: String,
     ): CompileResult =
         withContext(Dispatchers.IO) {
-            withBox { boxId ->
-                compileInBox(boxId, language, code)
+            semaphore.acquire()
+            val boxId = synchronized(boxPool) { boxPool.removeFirst() }
+            try {
+                val result = compileInBox(boxId, language, code)
+                if (!result.success) {
+                    synchronized(boxPool) { boxPool.addLast(boxId) }
+                    semaphore.release()
+                }
+                result
+            } catch (e: Exception) {
+                runCatching { cleanupBox(boxId) }
+                synchronized(boxPool) { boxPool.addLast(boxId) }
+                semaphore.release()
+                throw e
             }
         }
 
@@ -71,7 +83,13 @@ class IsolateExecutor(
         return runInBox(boxId, config.executeCommand, timeLimit / 1000.0, memoryLimit, "input.txt")
     }
 
-    fun cleanupBox(boxId: Int) {
+    fun releaseBox(boxId: Int) {
+        runCatching { cleanupBox(boxId) }
+        synchronized(boxPool) { boxPool.addLast(boxId) }
+        semaphore.release()
+    }
+
+    private fun cleanupBox(boxId: Int) {
         ProcessBuilder("isolate", "--cg", "-b", boxId.toString(), "--cleanup").start().waitFor()
     }
 
@@ -174,38 +192,29 @@ class IsolateExecutor(
     ): CompileResult {
         val config = LanguageConfig.of(language)
         val boxPath = initBox(boxId)
+        val boxDir = Path.of(boxPath, "box")
+        Files.writeString(boxDir.resolve(config.sourceFile), code)
 
-        try {
-            val boxDir = Path.of(boxPath, "box")
-            Files.writeString(boxDir.resolve(config.sourceFile), code)
+        if (config.compileCommand == null) {
+            return CompileResult(success = true, error = null, boxPath = boxPath, boxId = boxId)
+        }
 
-            if (config.compileCommand == null) {
-                return CompileResult(success = true, error = null, boxPath = boxPath, boxId = boxId)
-            }
-
-            val result = runInBox(boxId, config.compileCommand, 30.0, 512 * 1024, null)
-            return if (result.success) {
-                CompileResult(success = true, error = null, boxPath = boxPath, boxId = boxId)
-            } else {
-                cleanupBox(boxId)
-                CompileResult(success = false, error = result.stderr, boxPath = null, boxId = null)
-            }
-        } catch (e: Exception) {
+        val result = runInBox(boxId, config.compileCommand, 30.0, 512 * 1024, null)
+        return if (result.success) {
+            CompileResult(success = true, error = null, boxPath = boxPath, boxId = boxId)
+        } else {
             cleanupBox(boxId)
-            throw e
+            CompileResult(success = false, error = result.stderr, boxPath = null, boxId = null)
         }
     }
 
     private fun initBox(boxId: Int): String {
+        cleanupBox(boxId)
         val process =
             ProcessBuilder("isolate", "--cg", "-b", boxId.toString(), "--init")
                 .redirectErrorStream(true)
                 .start()
-        val output =
-            process.inputStream
-                .bufferedReader()
-                .readText()
-                .trim()
+        val output = process.inputStream.bufferedReader().readText().trim()
         val exitCode = process.waitFor()
         if (exitCode != 0) {
             throw RuntimeException("Failed to init isolate box $boxId: $output")

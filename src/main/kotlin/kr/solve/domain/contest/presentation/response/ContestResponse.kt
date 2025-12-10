@@ -28,6 +28,7 @@ fun Contest.toSummary() =
 fun Contest.toDetail(
     contestProblems: List<ContestProblem>,
     problemMap: Map<UUID, Problem>,
+    isParticipating: Boolean,
 ) = ContestResponse.Detail(
     id = id,
     title = title,
@@ -55,6 +56,7 @@ fun Contest.toDetail(
         },
     createdAt = createdAt,
     updatedAt = updatedAt,
+    isParticipating = isParticipating,
 )
 
 object ContestResponse {
@@ -116,6 +118,8 @@ object ContestResponse {
         val createdAt: LocalDateTime?,
         @Schema(description = "수정일시")
         val updatedAt: LocalDateTime?,
+        @Schema(description = "현재 사용자의 참가 여부")
+        val isParticipating: Boolean,
     ) {
         @Schema(name = "Contest.Detail.Problem", description = "대회 문제 정보")
         data class Problem(

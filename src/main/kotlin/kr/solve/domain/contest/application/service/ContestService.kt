@@ -21,8 +21,10 @@ import kr.solve.domain.user.domain.enums.UserRole
 import kr.solve.domain.user.domain.repository.UserRepository
 import kr.solve.global.error.BusinessException
 import kr.solve.global.security.userId
+import kr.solve.global.security.userIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
@@ -46,14 +48,23 @@ class ContestService(
             contestRepository.findById(contestId)
                 ?: throw BusinessException(ContestError.NOT_FOUND)
 
-        val contestProblems = contestProblemRepository.findAllByContestIdOrderByOrder(contestId).toList()
+        val isStarted = LocalDateTime.now() >= contest.startAt
+        val contestProblems =
+            if (isStarted) contestProblemRepository.findAllByContestIdOrderByOrder(contestId).toList() else emptyList()
         val problemMap =
-            problemRepository
-                .findAllByIdIn(contestProblems.map { it.problemId })
-                .toList()
-                .associateBy { it.id }
+            if (isStarted) {
+                problemRepository
+                    .findAllByIdIn(contestProblems.map { it.problemId })
+                    .toList()
+                    .associateBy { it.id }
+            } else {
+                emptyMap()
+            }
 
-        return contest.toDetail(contestProblems, problemMap)
+        val isParticipating =
+            userIdOrNull()?.let { contestParticipantRepository.existsByContestIdAndUserId(contestId, it) } ?: false
+
+        return contest.toDetail(contestProblems, problemMap, isParticipating)
     }
 
     @Transactional
