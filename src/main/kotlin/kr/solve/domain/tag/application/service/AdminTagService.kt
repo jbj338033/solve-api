@@ -1,0 +1,52 @@
+package kr.solve.domain.tag.application.service
+
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kr.solve.domain.tag.domain.entity.Tag
+import kr.solve.domain.tag.domain.error.TagError
+import kr.solve.domain.tag.domain.repository.TagRepository
+import kr.solve.domain.tag.presentation.response.AdminTagResponse
+import kr.solve.domain.tag.presentation.response.toAdminResponse
+import kr.solve.global.error.BusinessException
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
+
+@Service
+class AdminTagService(
+    private val tagRepository: TagRepository,
+) {
+    fun getTags(): Flow<AdminTagResponse> =
+        tagRepository.findAll().map { it.toAdminResponse() }
+
+    @Transactional
+    suspend fun createTag(name: String): AdminTagResponse {
+        if (tagRepository.existsByName(name)) {
+            throw BusinessException(TagError.DUPLICATE, name)
+        }
+
+        val tag = tagRepository.save(Tag(name = name))
+        return tag.toAdminResponse()
+    }
+
+    @Transactional
+    suspend fun updateTag(tagId: UUID, name: String): AdminTagResponse {
+        val tag = tagRepository.findById(tagId)
+            ?: throw BusinessException(TagError.NOT_FOUND)
+
+        if (tag.name != name && tagRepository.existsByName(name)) {
+            throw BusinessException(TagError.DUPLICATE, name)
+        }
+
+        val updated = tagRepository.save(tag.copy(name = name))
+        return updated.toAdminResponse()
+    }
+
+    @Transactional
+    suspend fun deleteTag(tagId: UUID) {
+        val tag = tagRepository.findById(tagId)
+            ?: throw BusinessException(TagError.NOT_FOUND)
+
+        tagRepository.delete(tag)
+    }
+}
