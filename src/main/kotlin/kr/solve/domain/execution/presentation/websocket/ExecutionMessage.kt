@@ -7,11 +7,12 @@ data class ExecutionMessage(
     enum class Type {
         INIT,
         STDIN,
+        KILL,
+        READY,
         STDOUT,
         STDERR,
         COMPLETE,
         ERROR,
-        KILL,
     }
 
     data class InitData(
