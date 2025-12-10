@@ -47,7 +47,7 @@ class AuthService(
             }
 
         val providers = userOAuthRepository.findAllByUserId(user.id).map { it.provider }
-        val accessToken = jwtProvider.createAccessToken(user.id)
+        val accessToken = jwtProvider.createAccessToken(user.id, user.role)
         val refreshToken = jwtProvider.createRefreshToken(user.id)
         refreshTokenRepository.save(refreshToken, user.id)
 
@@ -65,9 +65,12 @@ class AuthService(
             refreshTokenRepository.findUserIdByToken(token)
                 ?: throw BusinessException(AuthError.INVALID_REFRESH_TOKEN)
 
+        val user = userRepository.findById(userId)
+            ?: throw BusinessException(UserError.NOT_FOUND)
+
         refreshTokenRepository.deleteByToken(token)
 
-        val accessToken = jwtProvider.createAccessToken(userId)
+        val accessToken = jwtProvider.createAccessToken(userId, user.role)
         val refreshToken = jwtProvider.createRefreshToken(userId)
         refreshTokenRepository.save(refreshToken, userId)
 

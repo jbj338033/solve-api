@@ -29,12 +29,12 @@ class JwtAuthenticationFilter(
             val tokenType = jwtProvider.getType(token)
             if (tokenType == JwtProvider.JwtType.ACCESS) {
                 val userId = jwtProvider.getUserId(token)
-                val authentication =
-                    UsernamePasswordAuthenticationToken(
-                        userId,
-                        null,
-                        listOf(SimpleGrantedAuthority("ROLE_USER")),
-                    )
+                val role = jwtProvider.getRole(token)
+                val authentication = UsernamePasswordAuthenticationToken(
+                    userId,
+                    null,
+                    listOf(SimpleGrantedAuthority("ROLE_$role")),
+                )
                 return chain
                     .filter(exchange)
                     .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication))

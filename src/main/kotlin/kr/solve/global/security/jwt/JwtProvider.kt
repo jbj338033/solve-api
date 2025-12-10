@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import kr.solve.domain.auth.domain.error.AuthError
+import kr.solve.domain.user.domain.enums.UserRole
 import kr.solve.global.error.BusinessException
 import org.springframework.stereotype.Component
 import java.util.Date
@@ -23,9 +24,11 @@ class JwtProvider(
         Jwts.parser().verifyWith(secretKey).build()
     }
 
-    fun createAccessToken(userId: UUID): String = createToken(userId, jwtProperties.accessTokenExpiration, JwtType.ACCESS)
+    fun createAccessToken(userId: UUID, role: UserRole): String =
+        createToken(userId, role, jwtProperties.accessTokenExpiration, JwtType.ACCESS)
 
-    fun createRefreshToken(userId: UUID): String = createToken(userId, jwtProperties.refreshTokenExpiration, JwtType.REFRESH)
+    fun createRefreshToken(userId: UUID): String =
+        createToken(userId, null, jwtProperties.refreshTokenExpiration, JwtType.REFRESH)
 
     fun validateToken(token: String): Boolean = runCatching { parser.parseSignedClaims(token) }.isSuccess
 
@@ -33,8 +36,11 @@ class JwtProvider(
 
     fun getType(token: String): JwtType = JwtType.valueOf(parse(token)[CLAIM_TYPE] as String)
 
+    fun getRole(token: String): UserRole = UserRole.valueOf(parse(token)[CLAIM_ROLE] as String)
+
     private fun createToken(
         userId: UUID,
+        role: UserRole?,
         expiration: Long,
         type: JwtType,
     ): String =
@@ -42,6 +48,7 @@ class JwtProvider(
             .builder()
             .subject(userId.toString())
             .claim(CLAIM_TYPE, type.name)
+            .apply { role?.let { claim(CLAIM_ROLE, it.name) } }
             .issuedAt(Date())
             .expiration(Date(System.currentTimeMillis() + expiration))
             .signWith(secretKey)
@@ -60,5 +67,6 @@ class JwtProvider(
 
     companion object {
         private const val CLAIM_TYPE = "type"
+        private const val CLAIM_ROLE = "role"
     }
 }
