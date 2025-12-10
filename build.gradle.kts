@@ -20,6 +20,10 @@ repositories {
     mavenCentral()
 }
 
+configurations.all {
+    exclude(group = "io.netty", module = "netty-codec-quic")
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
