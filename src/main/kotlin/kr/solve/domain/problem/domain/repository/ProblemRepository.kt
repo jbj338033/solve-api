@@ -20,6 +20,19 @@ interface ProblemRepository : CoroutineCrudRepository<Problem, UUID> {
         limit: Int,
     ): Flow<Problem>
 
+    @Query(
+        """
+        SELECT * FROM problems
+        WHERE (:cursor IS NULL OR id < :cursor)
+        ORDER BY id DESC
+        LIMIT :limit
+        """,
+    )
+    fun findAllByOrderByIdDesc(
+        cursor: UUID?,
+        limit: Int,
+    ): Flow<Problem>
+
     fun findAllByAuthorId(authorId: UUID): Flow<Problem>
 
     @Query("SELECT * FROM problems WHERE id IN (:ids)")
