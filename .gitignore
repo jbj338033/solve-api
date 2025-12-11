@@ -41,3 +41,6 @@ out/
 
 ### Docs ###
 /docs/
+
+### Compose ###
+/.compose/
