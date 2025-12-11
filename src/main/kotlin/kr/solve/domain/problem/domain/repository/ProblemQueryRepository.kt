@@ -63,11 +63,14 @@ class ProblemQueryRepository(
             params["tagCount"] = tagIds.size
         }
 
+        val difficultyArray = ProblemDifficulty.entries.joinToString(", ") { "'${it.name}'" }
+        val difficultyOrder = "array_position(ARRAY[$difficultyArray], p.difficulty)"
+
         val orderBy =
             when (sort) {
                 ProblemSort.LATEST -> "p.id DESC"
-                ProblemSort.DIFFICULTY_ASC -> "p.difficulty ASC, p.id DESC"
-                ProblemSort.DIFFICULTY_DESC -> "p.difficulty DESC, p.id DESC"
+                ProblemSort.DIFFICULTY_ASC -> "$difficultyOrder ASC, p.id DESC"
+                ProblemSort.DIFFICULTY_DESC -> "$difficultyOrder DESC, p.id DESC"
                 ProblemSort.ACCEPT_RATE_DESC ->
                     "CASE WHEN COALESCE(ps.submission_count, 0) = 0 THEN 0 ELSE COALESCE(ps.accepted_count, 0)::float / ps.submission_count END DESC, p.id DESC"
                 ProblemSort.SUBMISSIONS_DESC -> "COALESCE(ps.submission_count, 0) DESC, p.id DESC"
