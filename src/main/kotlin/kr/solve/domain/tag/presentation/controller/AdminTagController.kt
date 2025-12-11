@@ -30,7 +30,7 @@ class AdminTagController(
 ) {
     @Operation(summary = "태그 목록 조회")
     @GetMapping
-    suspend fun getTags() = adminTagService.getTags()
+    fun getTags() = adminTagService.getTags()
 
     @Operation(summary = "태그 생성")
     @PostMapping
@@ -41,6 +41,7 @@ class AdminTagController(
 
     @Operation(summary = "태그 수정")
     @PatchMapping("/{tagId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateTag(
         @PathVariable tagId: UUID,
         @Valid @RequestBody request: AdminUpdateTagRequest,

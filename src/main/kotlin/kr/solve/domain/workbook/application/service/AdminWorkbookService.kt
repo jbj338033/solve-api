@@ -58,7 +58,7 @@ class AdminWorkbookService(
     }
 
     @Transactional
-    suspend fun createWorkbook(request: AdminCreateWorkbookRequest): AdminWorkbookResponse.Detail {
+    suspend fun createWorkbook(request: AdminCreateWorkbookRequest) {
         val workbook = workbookRepository.save(
             Workbook(
                 title = request.title,
@@ -70,12 +70,10 @@ class AdminWorkbookService(
         request.problemIds.forEachIndexed { index, problemId ->
             workbookProblemRepository.save(WorkbookProblem(workbookId = workbook.id, problemId = problemId, order = index))
         }
-
-        return getWorkbook(workbook.id)
     }
 
     @Transactional
-    suspend fun updateWorkbook(workbookId: UUID, request: AdminUpdateWorkbookRequest): AdminWorkbookResponse.Detail {
+    suspend fun updateWorkbook(workbookId: UUID, request: AdminUpdateWorkbookRequest) {
         val workbook = workbookRepository.findById(workbookId)
             ?: throw BusinessException(WorkbookError.NOT_FOUND)
 
@@ -92,8 +90,6 @@ class AdminWorkbookService(
                 workbookProblemRepository.save(WorkbookProblem(workbookId = workbookId, problemId = problemId, order = index))
             }
         }
-
-        return getWorkbook(workbookId)
     }
 
     @Transactional

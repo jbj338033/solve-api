@@ -21,50 +21,40 @@ class AdminBannerService(
     fun getBanners(): Flow<AdminBannerResponse> = bannerRepository.findAllByOrderByNameAsc().map { it.toAdminResponse() }
 
     suspend fun getBanner(bannerId: UUID): AdminBannerResponse {
-        val banner =
-            bannerRepository.findById(bannerId)
-                ?: throw BusinessException(BannerError.NOT_FOUND)
+        val banner = bannerRepository.findById(bannerId)
+            ?: throw BusinessException(BannerError.NOT_FOUND)
         return banner.toAdminResponse()
     }
 
     @Transactional
-    suspend fun createBanner(request: AdminCreateBannerRequest): AdminBannerResponse {
-        val banner =
-            bannerRepository.save(
-                Banner(
-                    name = request.name,
-                    description = request.description,
-                    imageUrl = request.imageUrl,
-                ),
-            )
-        return banner.toAdminResponse()
+    suspend fun createBanner(request: AdminCreateBannerRequest) {
+        bannerRepository.save(
+            Banner(
+                name = request.name,
+                description = request.description,
+                imageUrl = request.imageUrl,
+            ),
+        )
     }
 
     @Transactional
-    suspend fun updateBanner(
-        bannerId: UUID,
-        request: AdminUpdateBannerRequest,
-    ): AdminBannerResponse {
-        val banner =
-            bannerRepository.findById(bannerId)
-                ?: throw BusinessException(BannerError.NOT_FOUND)
+    suspend fun updateBanner(bannerId: UUID, request: AdminUpdateBannerRequest) {
+        val banner = bannerRepository.findById(bannerId)
+            ?: throw BusinessException(BannerError.NOT_FOUND)
 
-        val updated =
-            bannerRepository.save(
-                banner.copy(
-                    name = request.name ?: banner.name,
-                    description = request.description ?: banner.description,
-                    imageUrl = request.imageUrl ?: banner.imageUrl,
-                ),
-            )
-        return updated.toAdminResponse()
+        bannerRepository.save(
+            banner.copy(
+                name = request.name ?: banner.name,
+                description = request.description ?: banner.description,
+                imageUrl = request.imageUrl ?: banner.imageUrl,
+            ),
+        )
     }
 
     @Transactional
     suspend fun deleteBanner(bannerId: UUID) {
-        val banner =
-            bannerRepository.findById(bannerId)
-                ?: throw BusinessException(BannerError.NOT_FOUND)
+        val banner = bannerRepository.findById(bannerId)
+            ?: throw BusinessException(BannerError.NOT_FOUND)
         bannerRepository.delete(banner)
     }
 }

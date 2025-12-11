@@ -49,7 +49,7 @@ class AdminContestService(
     }
 
     @Transactional
-    suspend fun createContest(request: AdminCreateContestRequest): AdminContestResponse.Detail {
+    suspend fun createContest(request: AdminCreateContestRequest) {
         if (request.endAt <= request.startAt) {
             throw BusinessException(ContestError.INVALID_TIME_RANGE)
         }
@@ -71,12 +71,10 @@ class AdminContestService(
         )
 
         saveProblems(contest.id, request.problems)
-
-        return getContest(contest.id)
     }
 
     @Transactional
-    suspend fun updateContest(contestId: UUID, request: AdminUpdateContestRequest): AdminContestResponse.Detail {
+    suspend fun updateContest(contestId: UUID, request: AdminUpdateContestRequest) {
         val contest = contestRepository.findById(contestId)
             ?: throw BusinessException(ContestError.NOT_FOUND)
 
@@ -111,8 +109,6 @@ class AdminContestService(
             contestProblemRepository.deleteAllByContestId(contestId)
             saveProblems(contestId, problems)
         }
-
-        return getContest(contestId)
     }
 
     @Transactional

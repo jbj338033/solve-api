@@ -19,38 +19,29 @@ class AdminTagService(
     fun getTags(): Flow<AdminTagResponse> = tagRepository.findAll().map { it.toAdminResponse() }
 
     @Transactional
-    suspend fun createTag(name: String): AdminTagResponse {
+    suspend fun createTag(name: String) {
         if (tagRepository.existsByName(name)) {
             throw BusinessException(TagError.DUPLICATE, name)
         }
-
-        val tag = tagRepository.save(Tag(name = name))
-        return tag.toAdminResponse()
+        tagRepository.save(Tag(name = name))
     }
 
     @Transactional
-    suspend fun updateTag(
-        tagId: UUID,
-        name: String,
-    ): AdminTagResponse {
-        val tag =
-            tagRepository.findById(tagId)
-                ?: throw BusinessException(TagError.NOT_FOUND)
+    suspend fun updateTag(tagId: UUID, name: String) {
+        val tag = tagRepository.findById(tagId)
+            ?: throw BusinessException(TagError.NOT_FOUND)
 
         if (tag.name != name && tagRepository.existsByName(name)) {
             throw BusinessException(TagError.DUPLICATE, name)
         }
 
-        val updated = tagRepository.save(tag.copy(name = name))
-        return updated.toAdminResponse()
+        tagRepository.save(tag.copy(name = name))
     }
 
     @Transactional
     suspend fun deleteTag(tagId: UUID) {
-        val tag =
-            tagRepository.findById(tagId)
-                ?: throw BusinessException(TagError.NOT_FOUND)
-
+        val tag = tagRepository.findById(tagId)
+            ?: throw BusinessException(TagError.NOT_FOUND)
         tagRepository.delete(tag)
     }
 }

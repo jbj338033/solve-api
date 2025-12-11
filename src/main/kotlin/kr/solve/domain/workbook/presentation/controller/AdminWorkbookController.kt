@@ -51,6 +51,7 @@ class AdminWorkbookController(
 
     @Operation(summary = "워크북 수정")
     @PatchMapping("/{workbookId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateWorkbook(
         @PathVariable workbookId: UUID,
         @Valid @RequestBody request: AdminUpdateWorkbookRequest,

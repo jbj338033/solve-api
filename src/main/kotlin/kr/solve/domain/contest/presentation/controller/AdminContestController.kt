@@ -51,6 +51,7 @@ class AdminContestController(
 
     @Operation(summary = "대회 수정")
     @PatchMapping("/{contestId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateContest(
         @PathVariable contestId: UUID,
         @Valid @RequestBody request: AdminUpdateContestRequest,

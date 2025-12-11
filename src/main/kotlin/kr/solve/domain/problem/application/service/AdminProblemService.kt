@@ -61,7 +61,7 @@ class AdminProblemService(
     }
 
     @Transactional
-    suspend fun createProblem(request: AdminCreateProblemRequest): AdminProblemResponse.Detail {
+    suspend fun createProblem(request: AdminCreateProblemRequest) {
         val problem = problemRepository.save(
             Problem(
                 title = request.title,
@@ -83,12 +83,10 @@ class AdminProblemService(
 
         saveExamples(problem.id, request.examples)
         saveTags(problem.id, request.tagIds)
-
-        return getProblem(problem.id)
     }
 
     @Transactional
-    suspend fun updateProblem(problemId: UUID, request: AdminUpdateProblemRequest): AdminProblemResponse.Detail {
+    suspend fun updateProblem(problemId: UUID, request: AdminUpdateProblemRequest) {
         val problem = problemRepository.findById(problemId)
             ?: throw BusinessException(ProblemError.NOT_FOUND)
 
@@ -119,8 +117,6 @@ class AdminProblemService(
             problemTagRepository.deleteAllByProblemId(problemId)
             saveTags(problemId, it)
         }
-
-        return getProblem(problemId)
     }
 
     @Transactional

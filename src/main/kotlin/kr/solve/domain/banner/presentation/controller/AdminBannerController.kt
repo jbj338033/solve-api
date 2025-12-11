@@ -47,6 +47,7 @@ class AdminBannerController(
 
     @Operation(summary = "배너 수정")
     @PatchMapping("/{bannerId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateBanner(
         @PathVariable bannerId: UUID,
         @Valid @RequestBody request: AdminUpdateBannerRequest,

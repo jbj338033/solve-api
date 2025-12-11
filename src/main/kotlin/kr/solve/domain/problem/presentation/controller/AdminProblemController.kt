@@ -51,6 +51,7 @@ class AdminProblemController(
 
     @Operation(summary = "문제 수정")
     @PatchMapping("/{problemId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateProblem(
         @PathVariable problemId: UUID,
         @Valid @RequestBody request: AdminUpdateProblemRequest,
