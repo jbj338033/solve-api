@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: solve-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: solve
+      POSTGRES_USER: solve
+      POSTGRES_PASSWORD: solve
+    volumes:
+      - ./.compose/postgres/data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: solve-redis
+    volumes:
+      - ./.compose/redis/data:/data
+    ports:
+      - "6379:6379"
+
+  worker:
+    image: ghcr.io/jbj338033/solve-worker:latest
+    platform: linux/amd64
+    container_name: solve-worker
+    privileged: true
+    pid: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    environment:
+      RUST_LOG: info
+      REDIS_URL: redis://redis/
+      MAX_BOXES: 16
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
