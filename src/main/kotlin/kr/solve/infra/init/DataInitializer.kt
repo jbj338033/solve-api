@@ -15,6 +15,7 @@ import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.entity.ProblemExample
 import kr.solve.domain.problem.domain.entity.ProblemStats
 import kr.solve.domain.problem.domain.entity.ProblemTestCase
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.problem.domain.repository.ProblemExampleRepository
 import kr.solve.domain.problem.domain.repository.ProblemRepository
@@ -193,7 +194,7 @@ class DataInitializer(
                     description = "두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하시오.",
                     inputFormat = "첫째 줄에 A와 B가 주어진다. (0 < A, B < 10)",
                     outputFormat = "첫째 줄에 A+B를 출력한다.",
-                    difficulty = 1,
+                    difficulty = ProblemDifficulty.MOON_5,
                     timeLimit = 1000,
                     memoryLimit = 256,
                     authorId = admin.id,
@@ -210,7 +211,7 @@ class DataInitializer(
 - F(n) = F(n-1) + F(n-2) (n ≥ 2)""",
                     inputFormat = "첫째 줄에 n이 주어진다. (0 ≤ n ≤ 45)",
                     outputFormat = "첫째 줄에 n번째 피보나치 수를 출력한다.",
-                    difficulty = 5,
+                    difficulty = ProblemDifficulty.MOON_1,
                     timeLimit = 1000,
                     memoryLimit = 256,
                     authorId = admin.id,
@@ -224,7 +225,7 @@ class DataInitializer(
 팰린드롬이란 앞으로 읽으나 뒤로 읽으나 같은 문자열을 말합니다.""",
                     inputFormat = "첫째 줄에 문자열 S가 주어진다. (1 ≤ |S| ≤ 1000)",
                     outputFormat = "팰린드롬이면 \"YES\", 아니면 \"NO\"를 출력한다.",
-                    difficulty = 3,
+                    difficulty = ProblemDifficulty.MOON_3,
                     timeLimit = 1000,
                     memoryLimit = 256,
                     authorId = alice.id,
@@ -240,7 +241,7 @@ class DataInitializer(
 둘째 줄에는 시작 정점의 번호 K가 주어진다.
 셋째 줄부터 E개의 줄에 각 간선을 나타내는 세 개의 정수 (u, v, w)가 주어진다.""",
                     outputFormat = "첫째 줄부터 V개의 줄에 걸쳐, i번째 줄에 i번 정점으로의 최단 경로의 경로값을 출력한다.",
-                    difficulty = 12,
+                    difficulty = ProblemDifficulty.COMET_4,
                     timeLimit = 2000,
                     memoryLimit = 256,
                     authorId = admin.id,
@@ -253,7 +254,7 @@ class DataInitializer(
                     inputFormat = """첫째 줄에 N과 X가 주어진다. (1 ≤ N ≤ 100,000, -10^9 ≤ X ≤ 10^9)
 둘째 줄에 N개의 정수가 주어진다.""",
                     outputFormat = "X가 존재하면 1, 존재하지 않으면 0을 출력한다.",
-                    difficulty = 7,
+                    difficulty = ProblemDifficulty.STAR_4,
                     timeLimit = 1000,
                     memoryLimit = 256,
                     authorId = alice.id,
@@ -268,7 +269,7 @@ class DataInitializer(
                     inputFormat = """첫째 줄에 N, K가 주어진다. (1 ≤ N ≤ 100, 1 ≤ K ≤ 10,000)
 다음 N개의 줄에 각 동전의 가치가 주어진다.""",
                     outputFormat = "첫째 줄에 K원을 만드는데 필요한 동전 개수의 최솟값을 출력한다. 불가능한 경우에는 -1을 출력한다.",
-                    difficulty = 10,
+                    difficulty = ProblemDifficulty.STAR_1,
                     timeLimit = 1000,
                     memoryLimit = 256,
                     authorId = admin.id,
@@ -282,7 +283,7 @@ class DataInitializer(
 둘째 줄에 N개의 정수가 주어진다.
 셋째 줄부터 M개의 줄에 i와 j가 주어진다.""",
                     outputFormat = "각 쿼리에 대해 구간 합을 출력한다.",
-                    difficulty = 6,
+                    difficulty = ProblemDifficulty.STAR_5,
                     timeLimit = 1000,
                     memoryLimit = 256,
                     authorId = charlie.id,
@@ -294,7 +295,7 @@ class DataInitializer(
                     description = "주어진 정수 N이 소수인지 판별하는 프로그램을 작성하시오.",
                     inputFormat = "첫째 줄에 정수 N이 주어진다. (2 ≤ N ≤ 10^12)",
                     outputFormat = "N이 소수이면 \"YES\", 아니면 \"NO\"를 출력한다.",
-                    difficulty = 8,
+                    difficulty = ProblemDifficulty.STAR_3,
                     timeLimit = 1000,
                     memoryLimit = 256,
                     authorId = admin.id,
@@ -308,7 +309,7 @@ class DataInitializer(
 예를 들어, "aabbaccc"의 경우 "2a2ba3c"로 표현할 수 있습니다.""",
                     inputFormat = "첫째 줄에 문자열 S가 주어진다. (1 ≤ |S| ≤ 1,000)",
                     outputFormat = "압축한 문자열의 최소 길이를 출력한다.",
-                    difficulty = 9,
+                    difficulty = ProblemDifficulty.STAR_2,
                     timeLimit = 1000,
                     memoryLimit = 256,
                     authorId = charlie.id,
@@ -323,7 +324,7 @@ class DataInitializer(
                     inputFormat = """첫째 줄에 정점의 개수 V와 간선의 개수 E가 주어진다. (1 ≤ V ≤ 10,000, 1 ≤ E ≤ 100,000)
 다음 E개의 줄에 각 간선을 나타내는 세 개의 정수 A, B, C가 주어진다.""",
                     outputFormat = "첫째 줄에 최소 스패닝 트리의 가중치를 출력한다.",
-                    difficulty = 14,
+                    difficulty = ProblemDifficulty.COMET_2,
                     timeLimit = 2000,
                     memoryLimit = 256,
                     authorId = admin.id,

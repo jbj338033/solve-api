@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
 import java.util.UUID
 
@@ -18,9 +19,7 @@ data class AdminCreateProblemRequest(
     val inputFormat: String,
     @field:NotBlank
     val outputFormat: String,
-    @field:Min(1)
-    @field:Max(30)
-    val difficulty: Int,
+    val difficulty: ProblemDifficulty,
     @field:Min(100)
     @field:Max(10000)
     val timeLimit: Int = 1000,

@@ -2,6 +2,7 @@ package kr.solve.domain.problem.presentation.response
 
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.solve.domain.problem.domain.entity.Problem
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.user.domain.entity.User
 import java.time.LocalDateTime
@@ -96,8 +97,8 @@ object AdminProblemResponse {
         val id: UUID,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
-        @Schema(description = "문제 난이도 (1-30)", example = "5")
-        val difficulty: Int,
+        @Schema(description = "문제 난이도")
+        val difficulty: ProblemDifficulty,
         @Schema(description = "문제 작성자")
         val author: Author,
         @Schema(description = "공개 여부")
@@ -116,8 +117,8 @@ object AdminProblemResponse {
         val id: UUID,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
-        @Schema(description = "문제 난이도 (1-30)", example = "5")
-        val difficulty: Int,
+        @Schema(description = "문제 난이도")
+        val difficulty: ProblemDifficulty,
         @Schema(description = "문제 작성자")
         val author: Author,
         @Schema(description = "공개 여부")

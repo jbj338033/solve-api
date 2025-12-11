@@ -7,6 +7,7 @@ import kr.solve.domain.contest.domain.enums.ContestType
 import kr.solve.domain.contest.domain.enums.ScoreboardType
 import kr.solve.domain.contest.domain.enums.ScoringType
 import kr.solve.domain.problem.domain.entity.Problem
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -71,8 +72,8 @@ object AdminContestResponse {
         val id: UUID,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
-        @Schema(description = "문제 난이도", example = "5")
-        val difficulty: Int,
+        @Schema(description = "문제 난이도")
+        val difficulty: ProblemDifficulty,
     )
 
     @Schema(name = "Admin.Contest.Summary", description = "대회 요약 정보")

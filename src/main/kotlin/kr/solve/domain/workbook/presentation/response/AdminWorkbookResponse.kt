@@ -1,6 +1,7 @@
 package kr.solve.domain.workbook.presentation.response
 
 import io.swagger.v3.oas.annotations.media.Schema
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.user.domain.entity.User
 import kr.solve.domain.workbook.domain.entity.Workbook
@@ -49,8 +50,8 @@ object AdminWorkbookResponse {
         val id: UUID,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
-        @Schema(description = "문제 난이도", example = "5")
-        val difficulty: Int,
+        @Schema(description = "문제 난이도")
+        val difficulty: ProblemDifficulty,
         @Schema(description = "문제 유형")
         val type: ProblemType,
     )

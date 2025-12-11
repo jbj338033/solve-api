@@ -1,6 +1,7 @@
 package kr.solve.domain.problem.domain.entity
 
 import com.github.f4b6a3.ulid.UlidCreator
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.Id
@@ -21,7 +22,7 @@ data class Problem(
     val description: String,
     val inputFormat: String,
     val outputFormat: String,
-    val difficulty: Int,
+    val difficulty: ProblemDifficulty,
     val timeLimit: Int = 1000,
     val memoryLimit: Int = 256,
     val authorId: UUID,

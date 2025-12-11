@@ -3,6 +3,7 @@ package kr.solve.domain.user.presentation.response
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.solve.common.enums.Tier
 import kr.solve.domain.banner.domain.entity.Banner
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.submission.domain.enums.Language
 import kr.solve.domain.user.domain.entity.User
 import kr.solve.domain.user.domain.entity.UserActivity
@@ -178,8 +179,8 @@ object UserResponse {
         val solvedCount: Int,
         @Schema(description = "총 제출 수", example = "100")
         val submissionCount: Int,
-        @Schema(description = "난이도별 분포 (난이도 -> 개수)")
-        val difficultyDistribution: Map<Int, Int>,
+        @Schema(description = "난이도별 분포")
+        val difficultyDistribution: Map<ProblemDifficulty, Int>,
         @Schema(description = "태그별 분포")
         val tagDistribution: List<TagStat>,
         @Schema(description = "언어별 분포")
