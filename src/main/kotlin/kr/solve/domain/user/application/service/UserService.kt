@@ -8,6 +8,7 @@ import kr.solve.domain.problem.domain.repository.ProblemTagRepository
 import kr.solve.domain.submission.domain.repository.SubmissionRepository
 import kr.solve.domain.tag.domain.repository.TagRepository
 import kr.solve.domain.user.domain.entity.UserOAuth
+import kr.solve.domain.user.domain.entity.UserSettings
 import kr.solve.domain.user.domain.enums.RatingType
 import kr.solve.domain.user.domain.enums.UserOAuthProvider
 import kr.solve.domain.user.domain.error.UserError
@@ -15,7 +16,9 @@ import kr.solve.domain.user.domain.repository.UserActivityRepository
 import kr.solve.domain.user.domain.repository.UserOAuthRepository
 import kr.solve.domain.user.domain.repository.UserRatingHistoryRepository
 import kr.solve.domain.user.domain.repository.UserRepository
+import kr.solve.domain.user.domain.repository.UserSettingsRepository
 import kr.solve.domain.user.presentation.request.OAuthLinkRequest
+import kr.solve.domain.user.presentation.request.UpdateUserSettingsRequest
 import kr.solve.domain.user.presentation.response.UserResponse
 import kr.solve.domain.user.presentation.response.toMe
 import kr.solve.domain.user.presentation.response.toProfile
@@ -34,6 +37,7 @@ class UserService(
     private val userOAuthRepository: UserOAuthRepository,
     private val userActivityRepository: UserActivityRepository,
     private val userRatingHistoryRepository: UserRatingHistoryRepository,
+    private val userSettingsRepository: UserSettingsRepository,
     private val bannerRepository: BannerRepository,
     private val submissionRepository: SubmissionRepository,
     private val problemRepository: ProblemRepository,
@@ -50,12 +54,13 @@ class UserService(
         return user.toMe(providers)
     }
 
-    suspend fun getByUsername(username: String): UserResponse.Profile {
+    suspend fun getProfile(username: String): UserResponse.Profile {
         val user =
             userRepository.findByUsername(username)
                 ?: throw BusinessException(UserError.NOT_FOUND)
         val banner = user.selectedBannerId?.let { bannerRepository.findById(it) }
-        return user.toProfile(banner)
+        val settings = userSettingsRepository.findById(user.id)
+        return user.toProfile(banner, settings)
     }
 
     suspend fun getRanking(type: RatingType): List<UserResponse.Rank> {
@@ -190,4 +195,32 @@ class UserService(
             languageDistribution = languageDistribution,
         )
     }
+
+    suspend fun getMySettings(): UserResponse.Settings {
+        val userId = userId()
+        val settings = userSettingsRepository.findById(userId)
+            ?: UserSettings(userId = userId)
+        return settings.toResponse()
+    }
+
+    @Transactional
+    suspend fun updateMySettings(request: UpdateUserSettingsRequest): UserResponse.Settings {
+        val userId = userId()
+        val existing = userSettingsRepository.findById(userId)
+        val settings = (existing ?: UserSettings(userId = userId)).let {
+            it.copy(
+                country = request.country ?: it.country,
+                countryVisible = request.countryVisible ?: it.countryVisible,
+                birthDate = request.birthDate ?: it.birthDate,
+                birthDateVisible = request.birthDateVisible ?: it.birthDateVisible,
+                gender = request.gender ?: it.gender,
+                genderOther = request.genderOther ?: it.genderOther,
+                genderVisible = request.genderVisible ?: it.genderVisible,
+                pronouns = request.pronouns ?: it.pronouns,
+                pronounsVisible = request.pronounsVisible ?: it.pronounsVisible,
+            )
+        }''
+        return userSettingsRepository.save(settings).toResponse()
+    }
+
 }

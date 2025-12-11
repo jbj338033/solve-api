@@ -10,10 +10,12 @@ import kr.solve.domain.user.application.service.UserService
 import kr.solve.domain.user.domain.enums.RatingType
 import kr.solve.domain.user.domain.enums.UserOAuthProvider
 import kr.solve.domain.user.presentation.request.OAuthLinkRequest
+import kr.solve.domain.user.presentation.request.UpdateUserSettingsRequest
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -36,11 +38,21 @@ class UserController(
     @GetMapping("/me")
     suspend fun getMyInfo() = userService.getMe()
 
+    @Operation(summary = "내 설정 조회", security = [SecurityRequirement(name = "bearerAuth")])
+    @GetMapping("/me/settings")
+    suspend fun getMySettings() = userService.getMySettings()
+
+    @Operation(summary = "내 설정 수정", security = [SecurityRequirement(name = "bearerAuth")])
+    @PatchMapping("/me/settings")
+    suspend fun updateMySettings(
+        @Valid @RequestBody request: UpdateUserSettingsRequest,
+    ) = userService.updateMySettings(request)
+
     @Operation(summary = "사용자 프로필 조회")
     @GetMapping("/{username}")
     suspend fun getProfile(
         @PathVariable username: String,
-    ) = userService.getByUsername(username)
+    ) = userService.getProfile(username)
 
     @Operation(
         summary = "OAuth 연동 추가",

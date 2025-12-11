@@ -8,6 +8,8 @@ import kr.solve.domain.submission.domain.enums.Language
 import kr.solve.domain.user.domain.entity.User
 import kr.solve.domain.user.domain.entity.UserActivity
 import kr.solve.domain.user.domain.entity.UserRatingHistory
+import kr.solve.domain.user.domain.entity.UserSettings
+import kr.solve.domain.user.domain.enums.Gender
 import kr.solve.domain.user.domain.enums.RatingType
 import kr.solve.domain.user.domain.enums.UserOAuthProvider
 import kr.solve.domain.user.domain.enums.UserRole
@@ -31,23 +33,30 @@ fun User.toMe(providers: List<UserOAuthProvider>) =
         createdAt = createdAt,
     )
 
-fun User.toProfile(banner: Banner?) =
-    UserResponse.Profile(
-        id = id,
-        username = username,
-        displayName = displayName,
-        profileImage = profileImage,
-        bio = bio,
-        organization = organization,
-        problemRating = problemRating,
-        contestRating = contestRating,
-        problemTier = Tier.fromRating(problemRating),
-        contestTier = Tier.fromRating(contestRating),
-        currentStreak = currentStreak,
-        maxStreak = maxStreak,
-        banner = banner?.let { UserResponse.Profile.Banner(it.id, it.name, it.imageUrl) },
-        createdAt = createdAt,
-    )
+fun User.toProfile(
+    banner: Banner?,
+    settings: UserSettings?,
+) = UserResponse.Profile(
+    id = id,
+    username = username,
+    displayName = displayName,
+    profileImage = profileImage,
+    bio = bio,
+    organization = organization,
+    problemRating = problemRating,
+    contestRating = contestRating,
+    problemTier = Tier.fromRating(problemRating),
+    contestTier = Tier.fromRating(contestRating),
+    currentStreak = currentStreak,
+    maxStreak = maxStreak,
+    banner = banner?.let { UserResponse.Profile.Banner(it.id, it.name, it.imageUrl) },
+    country = settings?.let { if (it.countryVisible) it.country else null },
+    birthDate = settings?.let { if (it.birthDateVisible) it.birthDate else null },
+    gender = settings?.let { if (it.genderVisible) it.gender else null },
+    genderOther = settings?.let { if (it.genderVisible && it.gender == Gender.OTHER) it.genderOther else null },
+    pronouns = settings?.let { if (it.pronounsVisible) it.pronouns else null },
+    createdAt = createdAt,
+)
 
 fun User.toRank(
     rank: Int,
@@ -82,6 +91,19 @@ fun UserRatingHistory.toResponse() =
         ratingType = ratingType,
         contestId = contestId,
         recordedAt = recordedAt,
+    )
+
+fun UserSettings.toResponse() =
+    UserResponse.Settings(
+        country = country,
+        countryVisible = countryVisible,
+        birthDate = birthDate,
+        birthDateVisible = birthDateVisible,
+        gender = gender,
+        genderOther = genderOther,
+        genderVisible = genderVisible,
+        pronouns = pronouns,
+        pronounsVisible = pronounsVisible,
     )
 
 object UserResponse {
@@ -141,6 +163,16 @@ object UserResponse {
         val maxStreak: Int,
         @Schema(description = "선택한 배너")
         val banner: Banner?,
+        @Schema(description = "국가")
+        val country: String?,
+        @Schema(description = "생년월일")
+        val birthDate: LocalDate?,
+        @Schema(description = "성별")
+        val gender: Gender?,
+        @Schema(description = "기타 성별")
+        val genderOther: String?,
+        @Schema(description = "대명사")
+        val pronouns: String?,
         @Schema(description = "가입일시")
         val createdAt: LocalDateTime?,
     ) {
@@ -216,4 +248,27 @@ object UserResponse {
         @Schema(description = "기록 일시")
         val recordedAt: LocalDateTime,
     )
+
+    @Schema(name = "User.Settings", description = "사용자 설정")
+    data class Settings(
+        @Schema(description = "국가")
+        val country: String?,
+        @Schema(description = "국가 공개 여부")
+        val countryVisible: Boolean,
+        @Schema(description = "생년월일")
+        val birthDate: LocalDate?,
+        @Schema(description = "생년월일 공개 여부")
+        val birthDateVisible: Boolean,
+        @Schema(description = "성별")
+        val gender: Gender?,
+        @Schema(description = "기타 성별 (gender=OTHER인 경우)")
+        val genderOther: String?,
+        @Schema(description = "성별 공개 여부")
+        val genderVisible: Boolean,
+        @Schema(description = "대명사", example = "he/him")
+        val pronouns: String?,
+        @Schema(description = "대명사 공개 여부")
+        val pronounsVisible: Boolean,
+    )
+
 }
