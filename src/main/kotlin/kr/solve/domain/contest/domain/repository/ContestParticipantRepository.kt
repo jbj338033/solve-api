@@ -20,8 +20,12 @@ interface ContestParticipantRepository : CoroutineCrudRepository<ContestParticip
         userId: UUID,
     ): Boolean
 
+    suspend fun countByContestId(contestId: UUID): Long
+
     suspend fun deleteByContestIdAndUserId(
         contestId: UUID,
         userId: UUID,
     )
+
+    suspend fun deleteAllByContestId(contestId: UUID)
 }
