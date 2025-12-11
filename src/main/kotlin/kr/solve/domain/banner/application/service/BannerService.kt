@@ -1,5 +1,7 @@
 package kr.solve.domain.banner.application.service
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kr.solve.domain.banner.domain.error.BannerError
 import kr.solve.domain.banner.domain.repository.BannerRepository
@@ -21,11 +23,8 @@ class BannerService(
     private val userBannerRepository: UserBannerRepository,
     private val userRepository: UserRepository,
 ) {
-    suspend fun getBanners(): List<BannerResponse.Summary> =
-        bannerRepository
-            .findAllByOrderByNameAsc()
-            .toList()
-            .map { it.toResponse() }
+    fun getBanners(): Flow<BannerResponse.Summary> =
+        bannerRepository.findAllByOrderByNameAsc().map { it.toResponse() }
 
     suspend fun getMyBanners(): List<BannerResponse.Acquired> {
         val userId = userId()

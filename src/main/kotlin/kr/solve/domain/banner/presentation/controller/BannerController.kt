@@ -20,7 +20,7 @@ class BannerController(
 ) {
     @Operation(summary = "전체 배너 목록")
     @GetMapping
-    suspend fun getBanners() = bannerService.getBanners()
+    fun getBanners() = bannerService.getBanners()
 
     @Operation(summary = "내 배너 목록", security = [SecurityRequirement(name = "bearerAuth")])
     @GetMapping("/me")
