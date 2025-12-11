@@ -5,6 +5,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import kr.solve.domain.problem.application.service.ProblemService
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
+import kr.solve.domain.problem.domain.enums.ProblemSort
+import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.problem.presentation.request.CreateProblemRequest
 import kr.solve.domain.problem.presentation.request.UpdateProblemRequest
 import org.springframework.http.HttpStatus
@@ -31,7 +34,20 @@ class ProblemController(
     suspend fun getProblems(
         @RequestParam(required = false) cursor: UUID?,
         @RequestParam(defaultValue = "20") limit: Int,
-    ) = problemService.getProblems(cursor, limit.coerceIn(1, 100))
+        @RequestParam(required = false) difficulties: List<ProblemDifficulty>?,
+        @RequestParam(required = false) type: ProblemType?,
+        @RequestParam(required = false) query: String?,
+        @RequestParam(required = false) tagIds: List<UUID>?,
+        @RequestParam(defaultValue = "LATEST") sort: ProblemSort,
+    ) = problemService.getProblems(
+        cursor = cursor,
+        limit = limit.coerceIn(1, 100),
+        difficulties = difficulties,
+        type = type,
+        query = query,
+        tagIds = tagIds,
+        sort = sort,
+    )
 
     @Operation(summary = "문제 상세 조회")
     @GetMapping("/{problemId}")

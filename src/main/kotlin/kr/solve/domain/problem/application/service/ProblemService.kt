@@ -5,8 +5,12 @@ import kotlinx.coroutines.flow.toList
 import kr.solve.common.pagination.CursorPage
 import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.entity.ProblemExample
+import kr.solve.domain.problem.domain.enums.ProblemDifficulty
+import kr.solve.domain.problem.domain.enums.ProblemSort
+import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.problem.domain.error.ProblemError
 import kr.solve.domain.problem.domain.repository.ProblemExampleRepository
+import kr.solve.domain.problem.domain.repository.ProblemQueryRepository
 import kr.solve.domain.problem.domain.repository.ProblemRepository
 import kr.solve.domain.problem.domain.repository.ProblemTagRepository
 import kr.solve.domain.problem.presentation.request.CreateProblemRequest
@@ -26,6 +30,7 @@ import java.util.UUID
 @Service
 class ProblemService(
     private val problemRepository: ProblemRepository,
+    private val problemQueryRepository: ProblemQueryRepository,
     private val problemExampleRepository: ProblemExampleRepository,
     private val problemTagRepository: ProblemTagRepository,
     private val tagRepository: TagRepository,
@@ -34,8 +39,24 @@ class ProblemService(
     suspend fun getProblems(
         cursor: UUID?,
         limit: Int,
+        difficulties: List<ProblemDifficulty>?,
+        type: ProblemType?,
+        query: String?,
+        tagIds: List<UUID>?,
+        sort: ProblemSort,
     ): CursorPage<ProblemResponse.Summary> {
-        val problems = problemRepository.findAllByIsPublicTrueOrderByIdDesc(cursor, limit + 1).toList()
+        val problems =
+            problemQueryRepository
+                .findWithFilters(
+                    cursor = cursor,
+                    limit = limit + 1,
+                    difficulties = difficulties,
+                    type = type,
+                    query = query?.takeIf { it.isNotBlank() },
+                    tagIds = tagIds,
+                    sort = sort,
+                ).toList()
+
         val authorMap = userRepository.findAllByIdIn(problems.map { it.authorId }).toList().associateBy { it.id }
 
         return CursorPage.of(problems, limit) { problem ->
