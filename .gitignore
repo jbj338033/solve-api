@@ -43,4 +43,4 @@ out/
 /docs/
 
 ### Compose ###
-/.compose/
+/.compose/.env
