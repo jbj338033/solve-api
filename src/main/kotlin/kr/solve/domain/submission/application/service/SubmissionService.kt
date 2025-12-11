@@ -1,5 +1,6 @@
 package kr.solve.domain.submission.application.service
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.toList
@@ -34,6 +35,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class SubmissionService(
@@ -273,26 +276,31 @@ class SubmissionService(
                 finalMemory,
             )
 
-            val today = LocalDate.now()
-            val isFirstAc =
-                finalResult == JudgeResult.ACCEPTED &&
-                    !submissionRepository.existsByUserIdAndProblemIdAndResult(
-                        submission.userId,
-                        submission.problemId,
-                        JudgeResult.ACCEPTED,
-                    )
+            try {
+                val today = LocalDate.now()
+                val isFirstAc =
+                    finalResult == JudgeResult.ACCEPTED &&
+                        !submissionRepository.existsByUserIdAndProblemIdAndResult(
+                            submission.userId,
+                            submission.problemId,
+                            JudgeResult.ACCEPTED,
+                        )
 
-            userActivityRepository.upsertActivity(
-                userId = submission.userId,
-                date = today,
-                solvedCount = if (isFirstAc) 1 else 0,
-                submissionCount = 1,
-            )
+                userActivityRepository.upsertActivity(
+                    userId = submission.userId,
+                    date = today,
+                    solvedCount = if (isFirstAc) 1 else 0,
+                    submissionCount = 1,
+                )
 
-            if (isFirstAc) {
-                userRepository.updateStreak(submission.userId, today, today.minusDays(1))
+                if (isFirstAc) {
+                    userRepository.updateStreak(submission.userId, today, today.minusDays(1))
+                }
+            } catch (e: Exception) {
+                log.warn(e) { "Failed to update user activity for submission ${submission.id}" }
             }
         } catch (e: Exception) {
+            log.error(e) { "Failed to judge submission ${submission.id}" }
             submissionRepository.updateResult(
                 submission.id,
                 SubmissionStatus.COMPLETED,
