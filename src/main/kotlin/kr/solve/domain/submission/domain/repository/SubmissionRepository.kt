@@ -15,6 +15,9 @@ interface SubmissionRepository : CoroutineCrudRepository<Submission, UUID> {
     @Query("SELECT DISTINCT problem_id FROM submissions WHERE user_id = :userId AND result = 'ACCEPTED'")
     fun findSolvedProblemIdsByUserId(userId: UUID): Flow<UUID>
 
+    @Query("SELECT DISTINCT problem_id FROM submissions WHERE user_id = :userId AND problem_id = ANY(:problemIds) AND result = 'ACCEPTED'")
+    fun findSolvedProblemIdsByUserIdAndProblemIds(userId: UUID, problemIds: Array<UUID>): Flow<UUID>
+
     suspend fun existsByUserIdAndProblemIdAndResult(
         userId: UUID,
         problemId: UUID,

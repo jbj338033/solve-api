@@ -19,10 +19,13 @@ import kr.solve.domain.problem.presentation.request.UpdateProblemRequest
 import kr.solve.domain.problem.presentation.response.ProblemResponse
 import kr.solve.domain.problem.presentation.response.toDetail
 import kr.solve.domain.problem.presentation.response.toSummary
+import kr.solve.domain.submission.domain.enums.JudgeResult
+import kr.solve.domain.submission.domain.repository.SubmissionRepository
 import kr.solve.domain.tag.domain.repository.TagRepository
 import kr.solve.domain.user.domain.repository.UserRepository
 import kr.solve.global.error.BusinessException
 import kr.solve.global.security.userId
+import kr.solve.global.security.userIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -35,6 +38,7 @@ class ProblemService(
     private val problemTagRepository: ProblemTagRepository,
     private val tagRepository: TagRepository,
     private val userRepository: UserRepository,
+    private val submissionRepository: SubmissionRepository,
 ) {
     suspend fun getProblems(
         cursor: UUID?,
@@ -58,10 +62,15 @@ class ProblemService(
                 ).toList()
 
         val authorMap = userRepository.findAllByIdIn(problems.map { it.authorId }).toList().associateBy { it.id }
+        val userId = userIdOrNull()
+        val solvedIds = userId?.let {
+            val ids = problems.map { p -> p.id }.toTypedArray()
+            submissionRepository.findSolvedProblemIdsByUserIdAndProblemIds(it, ids).toList().toSet()
+        }
 
         return CursorPage.of(problems, limit) { problem ->
             val author = authorMap[problem.authorId] ?: return@of null
-            problem.toSummary(author)
+            problem.toSummary(author, solvedIds?.let { problem.id in it })
         }
     }
 
@@ -76,11 +85,15 @@ class ProblemService(
                 ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
         val tags = getTagsByProblemId(problem.id)
+        val isSolved = userIdOrNull()?.let {
+            submissionRepository.existsByUserIdAndProblemIdAndResult(it, problemId, JudgeResult.ACCEPTED)
+        }
 
         return problem.toDetail(
             author,
             examples.map { ProblemResponse.Example(it.input, it.output, it.order) },
             tags,
+            isSolved,
         )
     }
 

@@ -219,7 +219,7 @@ class UserService(
                 pronouns = request.pronouns ?: it.pronouns,
                 pronounsVisible = request.pronounsVisible ?: it.pronounsVisible,
             )
-        }''
+        }
         return userSettingsRepository.save(settings).toResponse()
     }
 

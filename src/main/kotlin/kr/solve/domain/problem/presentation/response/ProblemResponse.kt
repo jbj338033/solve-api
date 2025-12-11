@@ -8,21 +8,25 @@ import kr.solve.domain.user.domain.entity.User
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun Problem.toSummary(author: User) =
-    ProblemResponse.Summary(
-        id = id,
-        title = title,
-        difficulty = difficulty,
-        author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
-        isPublic = isPublic,
-        type = type,
-        createdAt = createdAt,
-    )
+fun Problem.toSummary(
+    author: User,
+    isSolved: Boolean? = null,
+) = ProblemResponse.Summary(
+    id = id,
+    title = title,
+    difficulty = difficulty,
+    author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
+    isPublic = isPublic,
+    type = type,
+    isSolved = isSolved,
+    createdAt = createdAt,
+)
 
 fun Problem.toDetail(
     author: User,
     examples: List<ProblemResponse.Example>,
     tags: List<ProblemResponse.Tag>,
+    isSolved: Boolean? = null,
 ) = ProblemResponse.Detail(
     id = id,
     title = title,
@@ -30,6 +34,7 @@ fun Problem.toDetail(
     author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
     isPublic = isPublic,
     type = type,
+    isSolved = isSolved,
     createdAt = createdAt,
     description = description,
     inputFormat = inputFormat,
@@ -90,6 +95,8 @@ object ProblemResponse {
         val isPublic: Boolean,
         @Schema(description = "문제 유형")
         val type: ProblemType,
+        @Schema(description = "해결 여부 (로그인 시)")
+        val isSolved: Boolean?,
         @Schema(description = "생성일시")
         val createdAt: LocalDateTime?,
     )
@@ -108,6 +115,8 @@ object ProblemResponse {
         val isPublic: Boolean,
         @Schema(description = "문제 유형")
         val type: ProblemType,
+        @Schema(description = "해결 여부 (로그인 시)")
+        val isSolved: Boolean?,
         @Schema(description = "생성일시")
         val createdAt: LocalDateTime?,
         @Schema(description = "문제 설명")
