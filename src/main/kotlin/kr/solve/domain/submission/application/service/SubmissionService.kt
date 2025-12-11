@@ -58,6 +58,7 @@ class SubmissionService(
         limit: Int,
     ): CursorPage<SubmissionResponse.Summary> {
         val submissions = submissionRepository.findAllByOrderByIdDesc(cursor, limit + 1).toList()
+        if (submissions.isEmpty()) return CursorPage(emptyList(), false)
 
         val problemIds = submissions.map { it.problemId }.distinct()
         val contestIds = submissions.mapNotNull { it.contestId }.distinct()
