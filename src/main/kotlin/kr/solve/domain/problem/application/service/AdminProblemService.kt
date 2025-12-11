@@ -5,12 +5,15 @@ import kotlinx.coroutines.flow.toList
 import kr.solve.common.pagination.CursorPage
 import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.entity.ProblemExample
+import kr.solve.domain.problem.domain.entity.ProblemTestCase
 import kr.solve.domain.problem.domain.error.ProblemError
 import kr.solve.domain.problem.domain.repository.ProblemExampleRepository
 import kr.solve.domain.problem.domain.repository.ProblemRepository
 import kr.solve.domain.problem.domain.repository.ProblemTagRepository
+import kr.solve.domain.problem.domain.repository.ProblemTestCaseRepository
 import kr.solve.domain.problem.presentation.request.AdminCreateProblemRequest
 import kr.solve.domain.problem.presentation.request.AdminExampleRequest
+import kr.solve.domain.problem.presentation.request.AdminTestCaseRequest
 import kr.solve.domain.problem.presentation.request.AdminUpdateProblemRequest
 import kr.solve.domain.problem.presentation.response.AdminProblemResponse
 import kr.solve.domain.problem.presentation.response.toAdminDetail
@@ -27,6 +30,7 @@ import java.util.UUID
 class AdminProblemService(
     private val problemRepository: ProblemRepository,
     private val problemExampleRepository: ProblemExampleRepository,
+    private val problemTestCaseRepository: ProblemTestCaseRepository,
     private val problemTagRepository: ProblemTagRepository,
     private val tagRepository: TagRepository,
     private val userRepository: UserRepository,
@@ -51,11 +55,13 @@ class AdminProblemService(
         val author = userRepository.findById(problem.authorId)
             ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
+        val testcases = problemTestCaseRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
         val tags = getTagsByProblemId(problem.id)
 
         return problem.toAdminDetail(
             author,
             examples.map { AdminProblemResponse.Example(it.input, it.output, it.order) },
+            testcases.map { AdminProblemResponse.TestCase(it.id, it.input, it.output, it.order) },
             tags,
         )
     }
@@ -82,6 +88,7 @@ class AdminProblemService(
         )
 
         saveExamples(problem.id, request.examples)
+        saveTestCases(problem.id, request.testcases)
         saveTags(problem.id, request.tagIds)
     }
 
@@ -113,6 +120,11 @@ class AdminProblemService(
             saveExamples(problemId, it)
         }
 
+        request.testcases?.let {
+            problemTestCaseRepository.deleteAllByProblemId(problemId)
+            saveTestCases(problemId, it)
+        }
+
         request.tagIds?.let {
             problemTagRepository.deleteAllByProblemId(problemId)
             saveTags(problemId, it)
@@ -125,6 +137,7 @@ class AdminProblemService(
             ?: throw BusinessException(ProblemError.NOT_FOUND)
 
         problemExampleRepository.deleteAllByProblemId(problemId)
+        problemTestCaseRepository.deleteAllByProblemId(problemId)
         problemTagRepository.deleteAllByProblemId(problemId)
         problemRepository.delete(problem)
     }
@@ -133,6 +146,14 @@ class AdminProblemService(
         examples.forEachIndexed { index, example ->
             problemExampleRepository.save(
                 ProblemExample(problemId = problemId, input = example.input, output = example.output, order = index),
+            )
+        }
+    }
+
+    private suspend fun saveTestCases(problemId: UUID, testcases: List<AdminTestCaseRequest>) {
+        testcases.forEachIndexed { index, testcase ->
+            problemTestCaseRepository.save(
+                ProblemTestCase(problemId = problemId, input = testcase.input, output = testcase.output, order = index),
             )
         }
     }

@@ -30,5 +30,7 @@ data class AdminUpdateProblemRequest(
     val interactorLanguage: String? = null,
     @field:Valid
     val examples: List<AdminExampleRequest>? = null,
+    @field:Valid
+    val testcases: List<AdminTestCaseRequest>? = null,
     val tagIds: List<UUID>? = null,
 )

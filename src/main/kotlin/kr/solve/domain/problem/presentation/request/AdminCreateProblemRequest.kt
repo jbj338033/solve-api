@@ -35,10 +35,19 @@ data class AdminCreateProblemRequest(
     val interactorLanguage: String? = null,
     @field:Valid
     val examples: List<AdminExampleRequest> = emptyList(),
+    @field:Valid
+    val testcases: List<AdminTestCaseRequest> = emptyList(),
     val tagIds: List<UUID> = emptyList(),
 )
 
 data class AdminExampleRequest(
+    @field:NotBlank
+    val input: String,
+    @field:NotBlank
+    val output: String,
+)
+
+data class AdminTestCaseRequest(
     @field:NotBlank
     val input: String,
     @field:NotBlank

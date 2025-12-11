@@ -22,6 +22,7 @@ fun Problem.toAdminSummary(author: User) =
 fun Problem.toAdminDetail(
     author: User,
     examples: List<AdminProblemResponse.Example>,
+    testcases: List<AdminProblemResponse.TestCase>,
     tags: List<AdminProblemResponse.Tag>,
 ) = AdminProblemResponse.Detail(
     id = id,
@@ -40,6 +41,7 @@ fun Problem.toAdminDetail(
     interactorCode = interactorCode,
     interactorLanguage = interactorLanguage,
     examples = examples,
+    testcases = testcases,
     tags = tags,
     createdAt = createdAt,
     updatedAt = updatedAt,
@@ -74,6 +76,18 @@ object AdminProblemResponse {
         val id: UUID,
         @Schema(description = "태그 이름", example = "DP")
         val name: String,
+    )
+
+    @Schema(name = "Admin.Problem.TestCase", description = "문제 테스트케이스")
+    data class TestCase(
+        @Schema(description = "테스트케이스 ID")
+        val id: UUID,
+        @Schema(description = "입력")
+        val input: String,
+        @Schema(description = "출력")
+        val output: String,
+        @Schema(description = "순서")
+        val order: Int,
     )
 
     @Schema(name = "Admin.Problem.Summary", description = "문제 요약 정보")
@@ -130,6 +144,8 @@ object AdminProblemResponse {
         val interactorLanguage: String?,
         @Schema(description = "예제 목록")
         val examples: List<Example>,
+        @Schema(description = "테스트케이스 목록")
+        val testcases: List<TestCase>,
         @Schema(description = "태그 목록")
         val tags: List<Tag>,
         @Schema(description = "생성일시")
