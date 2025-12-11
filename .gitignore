@@ -45,3 +45,4 @@ out/
 ### Compose ###
 /.compose/
 .env
+.DS_Store
