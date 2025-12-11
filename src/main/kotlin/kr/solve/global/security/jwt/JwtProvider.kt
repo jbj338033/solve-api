@@ -24,11 +24,12 @@ class JwtProvider(
         Jwts.parser().verifyWith(secretKey).build()
     }
 
-    fun createAccessToken(userId: UUID, role: UserRole): String =
-        createToken(userId, role, jwtProperties.accessTokenExpiration, JwtType.ACCESS)
+    fun createAccessToken(
+        userId: UUID,
+        role: UserRole,
+    ): String = createToken(userId, role, jwtProperties.accessTokenExpiration, JwtType.ACCESS)
 
-    fun createRefreshToken(userId: UUID): String =
-        createToken(userId, null, jwtProperties.refreshTokenExpiration, JwtType.REFRESH)
+    fun createRefreshToken(userId: UUID): String = createToken(userId, null, jwtProperties.refreshTokenExpiration, JwtType.REFRESH)
 
     fun validateToken(token: String): Boolean = runCatching { parser.parseSignedClaims(token) }.isSuccess
 

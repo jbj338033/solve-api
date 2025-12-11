@@ -7,14 +7,15 @@ import kr.solve.domain.workbook.domain.entity.Workbook
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun Workbook.toAdminSummary(author: User) = AdminWorkbookResponse.Summary(
-    id = id,
-    title = title,
-    description = description,
-    author = AdminWorkbookResponse.Author(author.id, author.username, author.displayName, author.profileImage),
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
+fun Workbook.toAdminSummary(author: User) =
+    AdminWorkbookResponse.Summary(
+        id = id,
+        title = title,
+        description = description,
+        author = AdminWorkbookResponse.Author(author.id, author.username, author.displayName, author.profileImage),
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 
 fun Workbook.toAdminDetail(
     author: User,

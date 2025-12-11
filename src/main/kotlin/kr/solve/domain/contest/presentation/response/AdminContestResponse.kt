@@ -10,20 +10,21 @@ import kr.solve.domain.problem.domain.entity.Problem
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun Contest.toAdminSummary() = AdminContestResponse.Summary(
-    id = id,
-    title = title,
-    description = description,
-    hostId = hostId,
-    startAt = startAt,
-    endAt = endAt,
-    type = type,
-    scoringType = scoringType,
-    scoreboardType = scoreboardType,
-    isRated = isRated,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
+fun Contest.toAdminSummary() =
+    AdminContestResponse.Summary(
+        id = id,
+        title = title,
+        description = description,
+        hostId = hostId,
+        startAt = startAt,
+        endAt = endAt,
+        type = type,
+        scoringType = scoringType,
+        scoreboardType = scoreboardType,
+        isRated = isRated,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 
 fun Contest.toAdminDetail(
     contestProblems: List<ContestProblem>,
@@ -42,17 +43,18 @@ fun Contest.toAdminDetail(
     scoreboardType = scoreboardType,
     freezeMinutes = freezeMinutes,
     isRated = isRated,
-    problems = contestProblems.mapNotNull { cp ->
-        problemMap[cp.problemId]?.let { problem ->
-            AdminContestResponse.Problem(
-                order = cp.order,
-                score = cp.score,
-                id = problem.id,
-                title = problem.title,
-                difficulty = problem.difficulty,
-            )
-        }
-    },
+    problems =
+        contestProblems.mapNotNull { cp ->
+            problemMap[cp.problemId]?.let { problem ->
+                AdminContestResponse.Problem(
+                    order = cp.order,
+                    score = cp.score,
+                    id = problem.id,
+                    title = problem.title,
+                    difficulty = problem.difficulty,
+                )
+            }
+        },
     participantCount = participantCount,
     createdAt = createdAt,
     updatedAt = updatedAt,

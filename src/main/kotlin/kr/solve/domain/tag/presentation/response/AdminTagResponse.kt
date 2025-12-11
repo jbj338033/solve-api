@@ -5,12 +5,13 @@ import kr.solve.domain.tag.domain.entity.Tag
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun Tag.toAdminResponse() = AdminTagResponse(
-    id = id,
-    name = name,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
+fun Tag.toAdminResponse() =
+    AdminTagResponse(
+        id = id,
+        name = name,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 
 @Schema(name = "Admin.Tag", description = "태그 상세 정보")
 data class AdminTagResponse(

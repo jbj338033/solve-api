@@ -38,26 +38,33 @@ class AdminWorkbookService(
     }
 
     suspend fun getWorkbook(workbookId: UUID): AdminWorkbookResponse.Detail {
-        val workbook = workbookRepository.findById(workbookId)
-            ?: throw BusinessException(WorkbookError.NOT_FOUND)
+        val workbook =
+            workbookRepository.findById(workbookId)
+                ?: throw BusinessException(WorkbookError.NOT_FOUND)
 
-        val author = userRepository.findById(workbook.authorId)
-            ?: throw BusinessException(WorkbookError.AUTHOR_NOT_FOUND)
+        val author =
+            userRepository.findById(workbook.authorId)
+                ?: throw BusinessException(WorkbookError.AUTHOR_NOT_FOUND)
         val workbookProblems = workbookProblemRepository.findAllByWorkbookIdOrderByOrder(workbookId).toList()
         val problemMap = problemRepository.findAllByIdIn(workbookProblems.map { it.problemId }).toList().associateBy { it.id }
-        val problems = workbookProblems.mapNotNull { wp ->
-            problemMap[wp.problemId]?.let {
-                AdminWorkbookResponse.Problem(it.id, it.title, it.difficulty, it.type)
+        val problems =
+            workbookProblems.mapNotNull { wp ->
+                problemMap[wp.problemId]?.let {
+                    AdminWorkbookResponse.Problem(it.id, it.title, it.difficulty, it.type)
+                }
             }
-        }
 
         return workbook.toAdminDetail(author, problems)
     }
 
     @Transactional
-    suspend fun updateWorkbook(workbookId: UUID, request: UpdateWorkbookRequest): AdminWorkbookResponse.Detail {
-        val workbook = workbookRepository.findById(workbookId)
-            ?: throw BusinessException(WorkbookError.NOT_FOUND)
+    suspend fun updateWorkbook(
+        workbookId: UUID,
+        request: UpdateWorkbookRequest,
+    ): AdminWorkbookResponse.Detail {
+        val workbook =
+            workbookRepository.findById(workbookId)
+                ?: throw BusinessException(WorkbookError.NOT_FOUND)
 
         workbookRepository.save(
             workbook.copy(
@@ -78,8 +85,9 @@ class AdminWorkbookService(
 
     @Transactional
     suspend fun deleteWorkbook(workbookId: UUID) {
-        val workbook = workbookRepository.findById(workbookId)
-            ?: throw BusinessException(WorkbookError.NOT_FOUND)
+        val workbook =
+            workbookRepository.findById(workbookId)
+                ?: throw BusinessException(WorkbookError.NOT_FOUND)
 
         workbookProblemRepository.deleteAllByWorkbookId(workbookId)
         workbookRepository.delete(workbook)

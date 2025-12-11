@@ -65,8 +65,9 @@ class AuthService(
             refreshTokenRepository.findUserIdByToken(token)
                 ?: throw BusinessException(AuthError.INVALID_REFRESH_TOKEN)
 
-        val user = userRepository.findById(userId)
-            ?: throw BusinessException(UserError.NOT_FOUND)
+        val user =
+            userRepository.findById(userId)
+                ?: throw BusinessException(UserError.NOT_FOUND)
 
         refreshTokenRepository.deleteByToken(token)
 

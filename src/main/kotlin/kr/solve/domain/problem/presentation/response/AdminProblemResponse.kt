@@ -7,16 +7,17 @@ import kr.solve.domain.user.domain.entity.User
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun Problem.toAdminSummary(author: User) = AdminProblemResponse.Summary(
-    id = id,
-    title = title,
-    difficulty = difficulty,
-    author = AdminProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
-    isPublic = isPublic,
-    type = type,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
+fun Problem.toAdminSummary(author: User) =
+    AdminProblemResponse.Summary(
+        id = id,
+        title = title,
+        difficulty = difficulty,
+        author = AdminProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
+        isPublic = isPublic,
+        type = type,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 
 fun Problem.toAdminDetail(
     author: User,

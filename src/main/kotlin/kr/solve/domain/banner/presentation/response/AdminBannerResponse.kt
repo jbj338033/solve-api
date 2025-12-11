@@ -5,14 +5,15 @@ import kr.solve.domain.banner.domain.entity.Banner
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun Banner.toAdminResponse() = AdminBannerResponse(
-    id = id,
-    name = name,
-    description = description,
-    imageUrl = imageUrl,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-)
+fun Banner.toAdminResponse() =
+    AdminBannerResponse(
+        id = id,
+        name = name,
+        description = description,
+        imageUrl = imageUrl,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+    )
 
 @Schema(name = "Admin.Banner", description = "배너 정보")
 data class AdminBannerResponse(

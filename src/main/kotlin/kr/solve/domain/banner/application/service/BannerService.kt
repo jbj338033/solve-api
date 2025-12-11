@@ -23,8 +23,7 @@ class BannerService(
     private val userBannerRepository: UserBannerRepository,
     private val userRepository: UserRepository,
 ) {
-    fun getBanners(): Flow<BannerResponse.Summary> =
-        bannerRepository.findAllByOrderByNameAsc().map { it.toResponse() }
+    fun getBanners(): Flow<BannerResponse.Summary> = bannerRepository.findAllByOrderByNameAsc().map { it.toResponse() }
 
     suspend fun getMyBanners(): List<BannerResponse.Acquired> {
         val userId = userId()

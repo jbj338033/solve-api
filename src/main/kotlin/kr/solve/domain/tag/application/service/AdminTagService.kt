@@ -16,8 +16,7 @@ import java.util.UUID
 class AdminTagService(
     private val tagRepository: TagRepository,
 ) {
-    fun getTags(): Flow<AdminTagResponse> =
-        tagRepository.findAll().map { it.toAdminResponse() }
+    fun getTags(): Flow<AdminTagResponse> = tagRepository.findAll().map { it.toAdminResponse() }
 
     @Transactional
     suspend fun createTag(name: String): AdminTagResponse {
@@ -30,9 +29,13 @@ class AdminTagService(
     }
 
     @Transactional
-    suspend fun updateTag(tagId: UUID, name: String): AdminTagResponse {
-        val tag = tagRepository.findById(tagId)
-            ?: throw BusinessException(TagError.NOT_FOUND)
+    suspend fun updateTag(
+        tagId: UUID,
+        name: String,
+    ): AdminTagResponse {
+        val tag =
+            tagRepository.findById(tagId)
+                ?: throw BusinessException(TagError.NOT_FOUND)
 
         if (tag.name != name && tagRepository.existsByName(name)) {
             throw BusinessException(TagError.DUPLICATE, name)
@@ -44,8 +47,9 @@ class AdminTagService(
 
     @Transactional
     suspend fun deleteTag(tagId: UUID) {
-        val tag = tagRepository.findById(tagId)
-            ?: throw BusinessException(TagError.NOT_FOUND)
+        val tag =
+            tagRepository.findById(tagId)
+                ?: throw BusinessException(TagError.NOT_FOUND)
 
         tagRepository.delete(tag)
     }

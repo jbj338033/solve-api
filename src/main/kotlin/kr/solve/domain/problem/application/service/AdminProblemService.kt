@@ -42,11 +42,13 @@ class AdminProblemService(
     }
 
     suspend fun getProblem(problemId: UUID): AdminProblemResponse.Detail {
-        val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ProblemError.NOT_FOUND)
 
-        val author = userRepository.findById(problem.authorId)
-            ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
+        val author =
+            userRepository.findById(problem.authorId)
+                ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
         val tags = getTagsByProblemId(problem.id)
 
@@ -58,9 +60,13 @@ class AdminProblemService(
     }
 
     @Transactional
-    suspend fun updateProblem(problemId: UUID, request: UpdateProblemRequest): AdminProblemResponse.Detail {
-        val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+    suspend fun updateProblem(
+        problemId: UUID,
+        request: UpdateProblemRequest,
+    ): AdminProblemResponse.Detail {
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ProblemError.NOT_FOUND)
 
         problemRepository.save(
             problem.copy(
@@ -95,15 +101,19 @@ class AdminProblemService(
 
     @Transactional
     suspend fun deleteProblem(problemId: UUID) {
-        val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ProblemError.NOT_FOUND)
 
         problemExampleRepository.deleteAllByProblemId(problemId)
         problemTagRepository.deleteAllByProblemId(problemId)
         problemRepository.delete(problem)
     }
 
-    private suspend fun saveExamples(problemId: UUID, examples: List<ExampleRequest>) {
+    private suspend fun saveExamples(
+        problemId: UUID,
+        examples: List<ExampleRequest>,
+    ) {
         examples.forEachIndexed { index, example ->
             problemExampleRepository.save(
                 ProblemExample(problemId = problemId, input = example.input, output = example.output, order = index),
@@ -111,7 +121,10 @@ class AdminProblemService(
         }
     }
 
-    private suspend fun saveTags(problemId: UUID, tagIds: List<UUID>) {
+    private suspend fun saveTags(
+        problemId: UUID,
+        tagIds: List<UUID>,
+    ) {
         tagIds.forEach { tagId -> problemTagRepository.insert(problemId, tagId) }
     }
 

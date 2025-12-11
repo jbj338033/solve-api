@@ -13,8 +13,22 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 )
 sealed class ExecuteEvent {
     data object Ready : ExecuteEvent()
-    data class Stdout(val data: String) : ExecuteEvent()
-    data class Stderr(val data: String) : ExecuteEvent()
-    data class Complete(val exitCode: Int, val time: Int, val memory: Int) : ExecuteEvent()
-    data class Error(val message: String) : ExecuteEvent()
+
+    data class Stdout(
+        val data: String,
+    ) : ExecuteEvent()
+
+    data class Stderr(
+        val data: String,
+    ) : ExecuteEvent()
+
+    data class Complete(
+        val exitCode: Int,
+        val time: Int,
+        val memory: Int,
+    ) : ExecuteEvent()
+
+    data class Error(
+        val message: String,
+    ) : ExecuteEvent()
 }

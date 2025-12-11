@@ -33,8 +33,9 @@ class AdminContestService(
     }
 
     suspend fun getContest(contestId: UUID): AdminContestResponse.Detail {
-        val contest = contestRepository.findById(contestId)
-            ?: throw BusinessException(ContestError.NOT_FOUND)
+        val contest =
+            contestRepository.findById(contestId)
+                ?: throw BusinessException(ContestError.NOT_FOUND)
 
         val contestProblems = contestProblemRepository.findAllByContestIdOrderByOrder(contestId).toList()
         val problemMap = problemRepository.findAllByIdIn(contestProblems.map { it.problemId }).toList().associateBy { it.id }
@@ -44,9 +45,13 @@ class AdminContestService(
     }
 
     @Transactional
-    suspend fun updateContest(contestId: UUID, request: UpdateContestRequest): AdminContestResponse.Detail {
-        val contest = contestRepository.findById(contestId)
-            ?: throw BusinessException(ContestError.NOT_FOUND)
+    suspend fun updateContest(
+        contestId: UUID,
+        request: UpdateContestRequest,
+    ): AdminContestResponse.Detail {
+        val contest =
+            contestRepository.findById(contestId)
+                ?: throw BusinessException(ContestError.NOT_FOUND)
 
         val startAt = request.startAt ?: contest.startAt
         val endAt = request.endAt ?: contest.endAt
@@ -86,8 +91,9 @@ class AdminContestService(
 
     @Transactional
     suspend fun deleteContest(contestId: UUID) {
-        val contest = contestRepository.findById(contestId)
-            ?: throw BusinessException(ContestError.NOT_FOUND)
+        val contest =
+            contestRepository.findById(contestId)
+                ?: throw BusinessException(ContestError.NOT_FOUND)
 
         contestProblemRepository.deleteAllByContestId(contestId)
         contestParticipantRepository.deleteAllByContestId(contestId)

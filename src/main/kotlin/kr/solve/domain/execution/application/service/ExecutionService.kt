@@ -26,23 +26,28 @@ class ExecutionService(
         language: Language,
         code: String,
     ): Pair<UUID, Flow<ExecuteEvent>> {
-        val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ExecutionError.EXECUTION_UNAVAILABLE)
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ExecutionError.EXECUTION_UNAVAILABLE)
 
         val executionId = UUID.randomUUID()
-        val request = ExecuteRequest(
-            executionId = executionId,
-            language = language,
-            code = code,
-            timeLimit = DEFAULT_TIME_LIMIT,
-            memoryLimit = problem.memoryLimit,
-        )
+        val request =
+            ExecuteRequest(
+                executionId = executionId,
+                language = language,
+                code = code,
+                timeLimit = DEFAULT_TIME_LIMIT,
+                memoryLimit = problem.memoryLimit,
+            )
 
         val events = workerClient.startExecution(request)
         return executionId to events
     }
 
-    suspend fun sendStdin(executionId: UUID, data: String) {
+    suspend fun sendStdin(
+        executionId: UUID,
+        data: String,
+    ) {
         workerClient.sendExecuteCommand(executionId.toString(), ExecuteCommand.Stdin(data))
     }
 

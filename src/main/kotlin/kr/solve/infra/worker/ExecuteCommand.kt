@@ -9,6 +9,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = ExecuteCommand.Kill::class, name = "KILL"),
 )
 sealed class ExecuteCommand {
-    data class Stdin(val data: String) : ExecuteCommand()
+    data class Stdin(
+        val data: String,
+    ) : ExecuteCommand()
+
     data object Kill : ExecuteCommand()
 }

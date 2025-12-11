@@ -21,94 +21,108 @@ class WorkerClient(
         private const val EXECUTE_COMMAND_CHANNEL = "solve:execute:commands"
 
         private fun judgeStreamKey(submissionId: String) = "solve:judge:stream:$submissionId"
+
         private fun executeStreamKey(executionId: String) = "solve:execute:stream:$executionId"
     }
 
-    fun startJudge(job: JudgeRequest): Flow<JudgeEvent> = flow {
-        val streamKey = judgeStreamKey(job.submissionId.toString())
-        val payload = jsonMapper.writeValueAsString(job)
+    fun startJudge(job: JudgeRequest): Flow<JudgeEvent> =
+        flow {
+            val streamKey = judgeStreamKey(job.submissionId.toString())
+            val payload = jsonMapper.writeValueAsString(job)
 
-        redisTemplate.opsForList()
-            .rightPush(JUDGE_QUEUE, payload)
-            .awaitSingle()
-
-        var lastId = "0"
-        while (true) {
-            val records = redisTemplate.opsForStream<String, String>()
-                .read(
-                    org.springframework.data.redis.connection.stream.StreamOffset.create(
-                        streamKey,
-                        org.springframework.data.redis.connection.stream.ReadOffset.from(lastId)
-                    )
-                )
-                .collectList()
+            redisTemplate
+                .opsForList()
+                .rightPush(JUDGE_QUEUE, payload)
                 .awaitSingle()
 
-            if (records.isEmpty()) {
-                delay(10)
-                continue
-            }
+            var lastId = "0"
+            while (true) {
+                val records =
+                    redisTemplate
+                        .opsForStream<String, String>()
+                        .read(
+                            org.springframework.data.redis.connection.stream.StreamOffset.create(
+                                streamKey,
+                                org.springframework.data.redis.connection.stream.ReadOffset
+                                    .from(lastId),
+                            ),
+                        ).collectList()
+                        .awaitSingle()
 
-            for (record in records) {
-                lastId = record.id.value
-                val data = record.value["data"] ?: continue
-                val event = runCatching {
-                    jsonMapper.readValue(data, JudgeEvent::class.java)
-                }.getOrNull() ?: continue
+                if (records.isEmpty()) {
+                    delay(10)
+                    continue
+                }
 
-                emit(event)
+                for (record in records) {
+                    lastId = record.id.value
+                    val data = record.value["data"] ?: continue
+                    val event =
+                        runCatching {
+                            jsonMapper.readValue(data, JudgeEvent::class.java)
+                        }.getOrNull() ?: continue
 
-                if (event is JudgeEvent.Complete) {
-                    redisTemplate.delete(streamKey).awaitSingle()
-                    return@flow
+                    emit(event)
+
+                    if (event is JudgeEvent.Complete) {
+                        redisTemplate.delete(streamKey).awaitSingle()
+                        return@flow
+                    }
                 }
             }
         }
-    }
 
-    fun startExecution(job: ExecuteRequest): Flow<ExecuteEvent> = flow {
-        val streamKey = executeStreamKey(job.executionId.toString())
-        val payload = jsonMapper.writeValueAsString(job)
+    fun startExecution(job: ExecuteRequest): Flow<ExecuteEvent> =
+        flow {
+            val streamKey = executeStreamKey(job.executionId.toString())
+            val payload = jsonMapper.writeValueAsString(job)
 
-        redisTemplate.opsForList()
-            .rightPush(EXECUTE_QUEUE, payload)
-            .awaitSingle()
-
-        var lastId = "0"
-        while (true) {
-            val records = redisTemplate.opsForStream<String, String>()
-                .read(
-                    org.springframework.data.redis.connection.stream.StreamOffset.create(
-                        streamKey,
-                        org.springframework.data.redis.connection.stream.ReadOffset.from(lastId)
-                    )
-                )
-                .collectList()
+            redisTemplate
+                .opsForList()
+                .rightPush(EXECUTE_QUEUE, payload)
                 .awaitSingle()
 
-            if (records.isEmpty()) {
-                delay(10)
-                continue
-            }
+            var lastId = "0"
+            while (true) {
+                val records =
+                    redisTemplate
+                        .opsForStream<String, String>()
+                        .read(
+                            org.springframework.data.redis.connection.stream.StreamOffset.create(
+                                streamKey,
+                                org.springframework.data.redis.connection.stream.ReadOffset
+                                    .from(lastId),
+                            ),
+                        ).collectList()
+                        .awaitSingle()
 
-            for (record in records) {
-                lastId = record.id.value
-                val data = record.value["data"] ?: continue
-                val event = runCatching {
-                    jsonMapper.readValue(data, ExecuteEvent::class.java)
-                }.getOrNull() ?: continue
+                if (records.isEmpty()) {
+                    delay(10)
+                    continue
+                }
 
-                emit(event)
+                for (record in records) {
+                    lastId = record.id.value
+                    val data = record.value["data"] ?: continue
+                    val event =
+                        runCatching {
+                            jsonMapper.readValue(data, ExecuteEvent::class.java)
+                        }.getOrNull() ?: continue
 
-                if (event is ExecuteEvent.Complete || event is ExecuteEvent.Error) {
-                    redisTemplate.delete(streamKey).awaitSingle()
-                    return@flow
+                    emit(event)
+
+                    if (event is ExecuteEvent.Complete || event is ExecuteEvent.Error) {
+                        redisTemplate.delete(streamKey).awaitSingle()
+                        return@flow
+                    }
                 }
             }
         }
-    }
 
-    suspend fun sendExecuteCommand(executionId: String, command: ExecuteCommand) {
+    suspend fun sendExecuteCommand(
+        executionId: String,
+        command: ExecuteCommand,
+    ) {
         val channel = "$EXECUTE_COMMAND_CHANNEL:$executionId"
         val payload = jsonMapper.writeValueAsString(command)
         redisTemplate.convertAndSend(channel, payload).awaitSingle()

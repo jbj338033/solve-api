@@ -37,29 +37,28 @@ class ExecutionWebSocketHandler(
 
         val output = session.send(sink.asFlux().map { session.textMessage(it) })
 
-        val input = session.receive()
-            .map { it.payloadAsText }
-            .doOnNext { payload ->
-                scope.launch {
-                    handleMessage(session, payload, executionIdRef, eventJob, sink, scope)
-                }
-            }
-            .doOnError { e ->
-                if (e !is CancellationException) {
-                    logger.error(e) { "WebSocket error" }
-                }
-            }
-            .doFinally {
-                runBlocking {
-                    executionIdRef.get()?.let { execId ->
-                        runCatching { executionService.killExecution(execId) }
+        val input =
+            session
+                .receive()
+                .map { it.payloadAsText }
+                .doOnNext { payload ->
+                    scope.launch {
+                        handleMessage(session, payload, executionIdRef, eventJob, sink, scope)
                     }
-                }
-                eventJob.get()?.cancel()
-                sink.tryEmitComplete()
-                scope.cancel()
-            }
-            .then()
+                }.doOnError { e ->
+                    if (e !is CancellationException) {
+                        logger.error(e) { "WebSocket error" }
+                    }
+                }.doFinally {
+                    runBlocking {
+                        executionIdRef.get()?.let { execId ->
+                            runCatching { executionService.killExecution(execId) }
+                        }
+                    }
+                    eventJob.get()?.cancel()
+                    sink.tryEmitComplete()
+                    scope.cancel()
+                }.then()
 
         return Mono.zip(input, output).then()
     }
@@ -97,45 +96,50 @@ class ExecutionWebSocketHandler(
     ) {
         if (executionIdRef.get() != null) return
 
-        val initData = parseInitData(msg.data) ?: run {
-            emitMessage(sink, ExecutionMessage(ExecutionMessage.Type.ERROR, "Invalid init data"))
-            return
-        }
+        val initData =
+            parseInitData(msg.data) ?: run {
+                emitMessage(sink, ExecutionMessage(ExecutionMessage.Type.ERROR, "Invalid init data"))
+                return
+            }
 
         try {
-            val (execId, events) = executionService.startExecution(
-                problemId = UUID.fromString(initData.problemId),
-                language = Language.valueOf(initData.language),
-                code = initData.code,
-            )
+            val (execId, events) =
+                executionService.startExecution(
+                    problemId = UUID.fromString(initData.problemId),
+                    language = Language.valueOf(initData.language),
+                    code = initData.code,
+                )
             executionIdRef.set(execId)
 
-            val job = scope.launch {
-                try {
-                    events.collect { event ->
-                        if (!isActive) return@collect
-                        val message = when (event) {
-                            is ExecuteEvent.Ready -> ExecutionMessage(ExecutionMessage.Type.READY)
-                            is ExecuteEvent.Stdout -> ExecutionMessage(ExecutionMessage.Type.STDOUT, event.data)
-                            is ExecuteEvent.Stderr -> ExecutionMessage(ExecutionMessage.Type.STDERR, event.data)
-                            is ExecuteEvent.Complete -> ExecutionMessage(
-                                ExecutionMessage.Type.COMPLETE,
-                                mapOf("exitCode" to event.exitCode, "time" to event.time, "memory" to event.memory),
-                            )
-                            is ExecuteEvent.Error -> ExecutionMessage(ExecutionMessage.Type.ERROR, event.message)
-                        }
-                        emitMessage(sink, message)
+            val job =
+                scope.launch {
+                    try {
+                        events.collect { event ->
+                            if (!isActive) return@collect
+                            val message =
+                                when (event) {
+                                    is ExecuteEvent.Ready -> ExecutionMessage(ExecutionMessage.Type.READY)
+                                    is ExecuteEvent.Stdout -> ExecutionMessage(ExecutionMessage.Type.STDOUT, event.data)
+                                    is ExecuteEvent.Stderr -> ExecutionMessage(ExecutionMessage.Type.STDERR, event.data)
+                                    is ExecuteEvent.Complete ->
+                                        ExecutionMessage(
+                                            ExecutionMessage.Type.COMPLETE,
+                                            mapOf("exitCode" to event.exitCode, "time" to event.time, "memory" to event.memory),
+                                        )
+                                    is ExecuteEvent.Error -> ExecutionMessage(ExecutionMessage.Type.ERROR, event.message)
+                                }
+                            emitMessage(sink, message)
 
-                        if (event is ExecuteEvent.Complete || event is ExecuteEvent.Error) {
-                            return@collect
+                            if (event is ExecuteEvent.Complete || event is ExecuteEvent.Error) {
+                                return@collect
+                            }
                         }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logger.error(e) { "Event collection error" }
                     }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    logger.error(e) { "Event collection error" }
                 }
-            }
             eventJob.set(job)
         } catch (e: CancellationException) {
             throw e
@@ -145,7 +149,10 @@ class ExecutionWebSocketHandler(
         }
     }
 
-    private suspend fun handleStdin(msg: ExecutionMessage, executionIdRef: AtomicReference<UUID?>) {
+    private suspend fun handleStdin(
+        msg: ExecutionMessage,
+        executionIdRef: AtomicReference<UUID?>,
+    ) {
         val execId = executionIdRef.get() ?: return
         val data = msg.data as? String ?: return
         executionService.sendStdin(execId, data)
@@ -156,7 +163,10 @@ class ExecutionWebSocketHandler(
         executionService.killExecution(execId)
     }
 
-    private fun emitMessage(sink: Sinks.Many<String>, message: ExecutionMessage) {
+    private fun emitMessage(
+        sink: Sinks.Many<String>,
+        message: ExecutionMessage,
+    ) {
         val json = jsonMapper.writeValueAsString(message)
         sink.tryEmitNext(json)
     }

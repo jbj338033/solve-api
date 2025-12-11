@@ -211,42 +211,46 @@ class SubmissionService(
             var finalMemory = 0
             var finalError: String? = null
 
-            judgeService.judge(
-                JudgeRequest(
-                    submissionId = submission.id,
-                    language = request.language,
-                    code = request.code,
-                    timeLimit = problem.timeLimit,
-                    memoryLimit = problem.memoryLimit,
-                    testcases = testcases,
-                ),
-            ).collect { event ->
-                when (event) {
-                    is JudgeEvent.Progress -> {
-                        submissionResultRepository.save(
-                            SubmissionResult(
-                                submissionId = submission.id,
-                                testcaseId = event.testcaseId,
-                                result = event.result,
-                                timeUsed = event.time,
-                                memoryUsed = event.memory,
-                            ),
-                        )
-                        submissionEventPublisher.publishUpdate(
-                            submission, problem, contest, user,
-                            SubmissionStatus.JUDGING,
-                            score = event.score,
-                        )
-                    }
-                    is JudgeEvent.Complete -> {
-                        finalResult = event.result
-                        finalScore = event.score
-                        finalTime = event.time
-                        finalMemory = event.memory
-                        finalError = event.error
+            judgeService
+                .judge(
+                    JudgeRequest(
+                        submissionId = submission.id,
+                        language = request.language,
+                        code = request.code,
+                        timeLimit = problem.timeLimit,
+                        memoryLimit = problem.memoryLimit,
+                        testcases = testcases,
+                    ),
+                ).collect { event ->
+                    when (event) {
+                        is JudgeEvent.Progress -> {
+                            submissionResultRepository.save(
+                                SubmissionResult(
+                                    submissionId = submission.id,
+                                    testcaseId = event.testcaseId,
+                                    result = event.result,
+                                    timeUsed = event.time,
+                                    memoryUsed = event.memory,
+                                ),
+                            )
+                            submissionEventPublisher.publishUpdate(
+                                submission,
+                                problem,
+                                contest,
+                                user,
+                                SubmissionStatus.JUDGING,
+                                score = event.score,
+                            )
+                        }
+                        is JudgeEvent.Complete -> {
+                            finalResult = event.result
+                            finalScore = event.score
+                            finalTime = event.time
+                            finalMemory = event.memory
+                            finalError = event.error
+                        }
                     }
                 }
-            }
 
             submissionRepository.updateResult(
                 submission.id,
@@ -258,7 +262,10 @@ class SubmissionService(
                 finalError,
             )
             submissionEventPublisher.publishUpdate(
-                submission, problem, contest, user,
+                submission,
+                problem,
+                contest,
+                user,
                 SubmissionStatus.COMPLETED,
                 finalResult,
                 finalScore,
@@ -296,7 +303,10 @@ class SubmissionService(
                 e.message,
             )
             submissionEventPublisher.publishUpdate(
-                submission, problem, contest, user,
+                submission,
+                problem,
+                contest,
+                user,
                 SubmissionStatus.COMPLETED,
                 JudgeResult.INTERNAL_ERROR,
                 0,
