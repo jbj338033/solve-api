@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import kr.solve.domain.file.application.service.FileService
 import kr.solve.domain.file.presentation.request.CreatePresignedUrlRequest
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping

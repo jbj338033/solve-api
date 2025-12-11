@@ -16,16 +16,20 @@ class StorageClient(
         contentType: String,
         expiresIn: Duration = Duration.ofMinutes(15),
     ): PresignedUploadResult {
-        val putObjectRequest = PutObjectRequest.builder()
-            .bucket(storageProperties.bucket)
-            .key(key)
-            .contentType(contentType)
-            .build()
+        val putObjectRequest =
+            PutObjectRequest
+                .builder()
+                .bucket(storageProperties.bucket)
+                .key(key)
+                .contentType(contentType)
+                .build()
 
-        val presignRequest = PutObjectPresignRequest.builder()
-            .signatureDuration(expiresIn)
-            .putObjectRequest(putObjectRequest)
-            .build()
+        val presignRequest =
+            PutObjectPresignRequest
+                .builder()
+                .signatureDuration(expiresIn)
+                .putObjectRequest(putObjectRequest)
+                .build()
 
         val presignedRequest = s3Presigner.presignPutObject(presignRequest)
 

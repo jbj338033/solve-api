@@ -1,6 +1,5 @@
 package kr.solve.domain.file.application.service
 
-import kr.solve.domain.file.domain.enums.FileType
 import kr.solve.domain.file.domain.error.FileError
 import kr.solve.domain.file.presentation.request.CreatePresignedUrlRequest
 import kr.solve.domain.file.presentation.response.PresignedUrlResponse

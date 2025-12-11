@@ -49,11 +49,13 @@ class AdminProblemService(
     }
 
     suspend fun getProblem(problemId: UUID): AdminProblemResponse.Detail {
-        val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ProblemError.NOT_FOUND)
 
-        val author = userRepository.findById(problem.authorId)
-            ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
+        val author =
+            userRepository.findById(problem.authorId)
+                ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
         val testcases = problemTestCaseRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
         val tags = getTagsByProblemId(problem.id)
@@ -68,24 +70,25 @@ class AdminProblemService(
 
     @Transactional
     suspend fun createProblem(request: AdminCreateProblemRequest) {
-        val problem = problemRepository.save(
-            Problem(
-                title = request.title,
-                description = request.description,
-                inputFormat = request.inputFormat,
-                outputFormat = request.outputFormat,
-                difficulty = request.difficulty,
-                timeLimit = request.timeLimit,
-                memoryLimit = request.memoryLimit,
-                authorId = userId(),
-                isPublic = request.isPublic,
-                type = request.type,
-                checkerCode = request.checkerCode,
-                checkerLanguage = request.checkerLanguage,
-                interactorCode = request.interactorCode,
-                interactorLanguage = request.interactorLanguage,
-            ),
-        )
+        val problem =
+            problemRepository.save(
+                Problem(
+                    title = request.title,
+                    description = request.description,
+                    inputFormat = request.inputFormat,
+                    outputFormat = request.outputFormat,
+                    difficulty = request.difficulty,
+                    timeLimit = request.timeLimit,
+                    memoryLimit = request.memoryLimit,
+                    authorId = userId(),
+                    isPublic = request.isPublic,
+                    type = request.type,
+                    checkerCode = request.checkerCode,
+                    checkerLanguage = request.checkerLanguage,
+                    interactorCode = request.interactorCode,
+                    interactorLanguage = request.interactorLanguage,
+                ),
+            )
 
         saveExamples(problem.id, request.examples)
         saveTestCases(problem.id, request.testcases)
@@ -93,9 +96,13 @@ class AdminProblemService(
     }
 
     @Transactional
-    suspend fun updateProblem(problemId: UUID, request: AdminUpdateProblemRequest) {
-        val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+    suspend fun updateProblem(
+        problemId: UUID,
+        request: AdminUpdateProblemRequest,
+    ) {
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ProblemError.NOT_FOUND)
 
         problemRepository.save(
             problem.copy(
@@ -133,8 +140,9 @@ class AdminProblemService(
 
     @Transactional
     suspend fun deleteProblem(problemId: UUID) {
-        val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ProblemError.NOT_FOUND)
 
         problemExampleRepository.deleteAllByProblemId(problemId)
         problemTestCaseRepository.deleteAllByProblemId(problemId)
@@ -142,7 +150,10 @@ class AdminProblemService(
         problemRepository.delete(problem)
     }
 
-    private suspend fun saveExamples(problemId: UUID, examples: List<AdminExampleRequest>) {
+    private suspend fun saveExamples(
+        problemId: UUID,
+        examples: List<AdminExampleRequest>,
+    ) {
         examples.forEachIndexed { index, example ->
             problemExampleRepository.save(
                 ProblemExample(problemId = problemId, input = example.input, output = example.output, order = index),
@@ -150,7 +161,10 @@ class AdminProblemService(
         }
     }
 
-    private suspend fun saveTestCases(problemId: UUID, testcases: List<AdminTestCaseRequest>) {
+    private suspend fun saveTestCases(
+        problemId: UUID,
+        testcases: List<AdminTestCaseRequest>,
+    ) {
         testcases.forEachIndexed { index, testcase ->
             problemTestCaseRepository.save(
                 ProblemTestCase(problemId = problemId, input = testcase.input, output = testcase.output, order = index),
@@ -158,7 +172,10 @@ class AdminProblemService(
         }
     }
 
-    private suspend fun saveTags(problemId: UUID, tagIds: List<UUID>) {
+    private suspend fun saveTags(
+        problemId: UUID,
+        tagIds: List<UUID>,
+    ) {
         tagIds.forEach { tagId -> problemTagRepository.insert(problemId, tagId) }
     }
 

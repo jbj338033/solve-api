@@ -21,8 +21,9 @@ class AdminBannerService(
     fun getBanners(): Flow<AdminBannerResponse> = bannerRepository.findAllByOrderByNameAsc().map { it.toAdminResponse() }
 
     suspend fun getBanner(bannerId: UUID): AdminBannerResponse {
-        val banner = bannerRepository.findById(bannerId)
-            ?: throw BusinessException(BannerError.NOT_FOUND)
+        val banner =
+            bannerRepository.findById(bannerId)
+                ?: throw BusinessException(BannerError.NOT_FOUND)
         return banner.toAdminResponse()
     }
 
@@ -38,9 +39,13 @@ class AdminBannerService(
     }
 
     @Transactional
-    suspend fun updateBanner(bannerId: UUID, request: AdminUpdateBannerRequest) {
-        val banner = bannerRepository.findById(bannerId)
-            ?: throw BusinessException(BannerError.NOT_FOUND)
+    suspend fun updateBanner(
+        bannerId: UUID,
+        request: AdminUpdateBannerRequest,
+    ) {
+        val banner =
+            bannerRepository.findById(bannerId)
+                ?: throw BusinessException(BannerError.NOT_FOUND)
 
         bannerRepository.save(
             banner.copy(
@@ -53,8 +58,9 @@ class AdminBannerService(
 
     @Transactional
     suspend fun deleteBanner(bannerId: UUID) {
-        val banner = bannerRepository.findById(bannerId)
-            ?: throw BusinessException(BannerError.NOT_FOUND)
+        val banner =
+            bannerRepository.findById(bannerId)
+                ?: throw BusinessException(BannerError.NOT_FOUND)
         bannerRepository.delete(banner)
     }
 }

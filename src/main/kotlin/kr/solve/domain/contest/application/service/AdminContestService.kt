@@ -38,8 +38,9 @@ class AdminContestService(
     }
 
     suspend fun getContest(contestId: UUID): AdminContestResponse.Detail {
-        val contest = contestRepository.findById(contestId)
-            ?: throw BusinessException(ContestError.NOT_FOUND)
+        val contest =
+            contestRepository.findById(contestId)
+                ?: throw BusinessException(ContestError.NOT_FOUND)
 
         val contestProblems = contestProblemRepository.findAllByContestIdOrderByOrder(contestId).toList()
         val problemMap = problemRepository.findAllByIdIn(contestProblems.map { it.problemId }).toList().associateBy { it.id }
@@ -54,29 +55,34 @@ class AdminContestService(
             throw BusinessException(ContestError.INVALID_TIME_RANGE)
         }
 
-        val contest = contestRepository.save(
-            Contest(
-                title = request.title,
-                description = request.description,
-                hostId = userId(),
-                startAt = request.startAt,
-                endAt = request.endAt,
-                type = request.type,
-                inviteCode = if (request.type == ContestType.PRIVATE) generateInviteCode() else null,
-                scoringType = request.scoringType,
-                scoreboardType = request.scoreboardType,
-                freezeMinutes = request.freezeMinutes,
-                isRated = request.isRated,
-            ),
-        )
+        val contest =
+            contestRepository.save(
+                Contest(
+                    title = request.title,
+                    description = request.description,
+                    hostId = userId(),
+                    startAt = request.startAt,
+                    endAt = request.endAt,
+                    type = request.type,
+                    inviteCode = if (request.type == ContestType.PRIVATE) generateInviteCode() else null,
+                    scoringType = request.scoringType,
+                    scoreboardType = request.scoreboardType,
+                    freezeMinutes = request.freezeMinutes,
+                    isRated = request.isRated,
+                ),
+            )
 
         saveProblems(contest.id, request.problems)
     }
 
     @Transactional
-    suspend fun updateContest(contestId: UUID, request: AdminUpdateContestRequest) {
-        val contest = contestRepository.findById(contestId)
-            ?: throw BusinessException(ContestError.NOT_FOUND)
+    suspend fun updateContest(
+        contestId: UUID,
+        request: AdminUpdateContestRequest,
+    ) {
+        val contest =
+            contestRepository.findById(contestId)
+                ?: throw BusinessException(ContestError.NOT_FOUND)
 
         val startAt = request.startAt ?: contest.startAt
         val endAt = request.endAt ?: contest.endAt
@@ -85,11 +91,12 @@ class AdminContestService(
         }
 
         val type = request.type ?: contest.type
-        val inviteCode = when {
-            type == ContestType.PUBLIC -> null
-            contest.inviteCode != null -> contest.inviteCode
-            else -> generateInviteCode()
-        }
+        val inviteCode =
+            when {
+                type == ContestType.PUBLIC -> null
+                contest.inviteCode != null -> contest.inviteCode
+                else -> generateInviteCode()
+            }
 
         contestRepository.save(
             contest.copy(
@@ -113,15 +120,19 @@ class AdminContestService(
 
     @Transactional
     suspend fun deleteContest(contestId: UUID) {
-        val contest = contestRepository.findById(contestId)
-            ?: throw BusinessException(ContestError.NOT_FOUND)
+        val contest =
+            contestRepository.findById(contestId)
+                ?: throw BusinessException(ContestError.NOT_FOUND)
 
         contestProblemRepository.deleteAllByContestId(contestId)
         contestParticipantRepository.deleteAllByContestId(contestId)
         contestRepository.delete(contest)
     }
 
-    private suspend fun saveProblems(contestId: UUID, problems: List<AdminContestProblemRequest>) {
+    private suspend fun saveProblems(
+        contestId: UUID,
+        problems: List<AdminContestProblemRequest>,
+    ) {
         problems.forEachIndexed { index, problem ->
             contestProblemRepository.save(
                 ContestProblem(

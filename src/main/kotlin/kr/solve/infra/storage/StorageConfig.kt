@@ -19,9 +19,10 @@ class StorageConfig(
         get() = URI.create("https://${storageProperties.accountId}.r2.cloudflarestorage.com")
 
     private val credentialsProvider: StaticCredentialsProvider
-        get() = StaticCredentialsProvider.create(
-            AwsBasicCredentials.create(storageProperties.accessKey, storageProperties.secretKey),
-        )
+        get() =
+            StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(storageProperties.accessKey, storageProperties.secretKey),
+            )
 
     @Bean
     fun s3Client(): S3Client =
