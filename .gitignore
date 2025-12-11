@@ -44,3 +44,4 @@ out/
 
 ### Compose ###
 /.compose/
+.env
