@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import kr.solve.domain.tag.application.service.AdminTagService
-import kr.solve.domain.tag.presentation.request.CreateTagRequest
-import kr.solve.domain.tag.presentation.request.UpdateTagRequest
+import kr.solve.domain.tag.presentation.request.AdminCreateTagRequest
+import kr.solve.domain.tag.presentation.request.AdminUpdateTagRequest
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -36,14 +36,14 @@ class AdminTagController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun createTag(
-        @Valid @RequestBody request: CreateTagRequest,
+        @Valid @RequestBody request: AdminCreateTagRequest,
     ) = adminTagService.createTag(request.name)
 
     @Operation(summary = "태그 수정")
     @PatchMapping("/{tagId}")
     suspend fun updateTag(
         @PathVariable tagId: UUID,
-        @Valid @RequestBody request: UpdateTagRequest,
+        @Valid @RequestBody request: AdminUpdateTagRequest,
     ) = adminTagService.updateTag(tagId, request.name)
 
     @Operation(summary = "태그 삭제")

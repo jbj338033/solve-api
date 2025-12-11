@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import kr.solve.domain.banner.application.service.AdminBannerService
-import kr.solve.domain.banner.presentation.request.CreateBannerRequest
-import kr.solve.domain.banner.presentation.request.UpdateBannerRequest
+import kr.solve.domain.banner.presentation.request.AdminCreateBannerRequest
+import kr.solve.domain.banner.presentation.request.AdminUpdateBannerRequest
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -42,14 +42,14 @@ class AdminBannerController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun createBanner(
-        @Valid @RequestBody request: CreateBannerRequest,
+        @Valid @RequestBody request: AdminCreateBannerRequest,
     ) = adminBannerService.createBanner(request)
 
     @Operation(summary = "배너 수정")
     @PatchMapping("/{bannerId}")
     suspend fun updateBanner(
         @PathVariable bannerId: UUID,
-        @Valid @RequestBody request: UpdateBannerRequest,
+        @Valid @RequestBody request: AdminUpdateBannerRequest,
     ) = adminBannerService.updateBanner(bannerId, request)
 
     @Operation(summary = "배너 삭제")

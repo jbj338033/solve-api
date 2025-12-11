@@ -5,13 +5,15 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import kr.solve.domain.problem.application.service.AdminProblemService
-import kr.solve.domain.problem.presentation.request.UpdateProblemRequest
+import kr.solve.domain.problem.presentation.request.AdminCreateProblemRequest
+import kr.solve.domain.problem.presentation.request.AdminUpdateProblemRequest
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -40,11 +42,18 @@ class AdminProblemController(
         @PathVariable problemId: UUID,
     ) = adminProblemService.getProblem(problemId)
 
+    @Operation(summary = "문제 생성")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    suspend fun createProblem(
+        @Valid @RequestBody request: AdminCreateProblemRequest,
+    ) = adminProblemService.createProblem(request)
+
     @Operation(summary = "문제 수정")
     @PatchMapping("/{problemId}")
     suspend fun updateProblem(
         @PathVariable problemId: UUID,
-        @Valid @RequestBody request: UpdateProblemRequest,
+        @Valid @RequestBody request: AdminUpdateProblemRequest,
     ) = adminProblemService.updateProblem(problemId, request)
 
     @Operation(summary = "문제 삭제")

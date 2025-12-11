@@ -2,17 +2,22 @@ package kr.solve.domain.contest.application.service
 
 import kotlinx.coroutines.flow.toList
 import kr.solve.common.pagination.CursorPage
+import kr.solve.domain.contest.domain.entity.Contest
 import kr.solve.domain.contest.domain.entity.ContestProblem
+import kr.solve.domain.contest.domain.enums.ContestType
 import kr.solve.domain.contest.domain.error.ContestError
 import kr.solve.domain.contest.domain.repository.ContestParticipantRepository
 import kr.solve.domain.contest.domain.repository.ContestProblemRepository
 import kr.solve.domain.contest.domain.repository.ContestRepository
-import kr.solve.domain.contest.presentation.request.UpdateContestRequest
+import kr.solve.domain.contest.presentation.request.AdminContestProblemRequest
+import kr.solve.domain.contest.presentation.request.AdminCreateContestRequest
+import kr.solve.domain.contest.presentation.request.AdminUpdateContestRequest
 import kr.solve.domain.contest.presentation.response.AdminContestResponse
 import kr.solve.domain.contest.presentation.response.toAdminDetail
 import kr.solve.domain.contest.presentation.response.toAdminSummary
 import kr.solve.domain.problem.domain.repository.ProblemRepository
 import kr.solve.global.error.BusinessException
+import kr.solve.global.security.userId
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -33,9 +38,8 @@ class AdminContestService(
     }
 
     suspend fun getContest(contestId: UUID): AdminContestResponse.Detail {
-        val contest =
-            contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+        val contest = contestRepository.findById(contestId)
+            ?: throw BusinessException(ContestError.NOT_FOUND)
 
         val contestProblems = contestProblemRepository.findAllByContestIdOrderByOrder(contestId).toList()
         val problemMap = problemRepository.findAllByIdIn(contestProblems.map { it.problemId }).toList().associateBy { it.id }
@@ -45,18 +49,48 @@ class AdminContestService(
     }
 
     @Transactional
-    suspend fun updateContest(
-        contestId: UUID,
-        request: UpdateContestRequest,
-    ): AdminContestResponse.Detail {
-        val contest =
-            contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+    suspend fun createContest(request: AdminCreateContestRequest): AdminContestResponse.Detail {
+        if (request.endAt <= request.startAt) {
+            throw BusinessException(ContestError.INVALID_TIME_RANGE)
+        }
+
+        val contest = contestRepository.save(
+            Contest(
+                title = request.title,
+                description = request.description,
+                hostId = userId(),
+                startAt = request.startAt,
+                endAt = request.endAt,
+                type = request.type,
+                inviteCode = if (request.type == ContestType.PRIVATE) generateInviteCode() else null,
+                scoringType = request.scoringType,
+                scoreboardType = request.scoreboardType,
+                freezeMinutes = request.freezeMinutes,
+                isRated = request.isRated,
+            ),
+        )
+
+        saveProblems(contest.id, request.problems)
+
+        return getContest(contest.id)
+    }
+
+    @Transactional
+    suspend fun updateContest(contestId: UUID, request: AdminUpdateContestRequest): AdminContestResponse.Detail {
+        val contest = contestRepository.findById(contestId)
+            ?: throw BusinessException(ContestError.NOT_FOUND)
 
         val startAt = request.startAt ?: contest.startAt
         val endAt = request.endAt ?: contest.endAt
         if (endAt <= startAt) {
             throw BusinessException(ContestError.INVALID_TIME_RANGE)
+        }
+
+        val type = request.type ?: contest.type
+        val inviteCode = when {
+            type == ContestType.PUBLIC -> null
+            contest.inviteCode != null -> contest.inviteCode
+            else -> generateInviteCode()
         }
 
         contestRepository.save(
@@ -65,7 +99,8 @@ class AdminContestService(
                 description = request.description ?: contest.description,
                 startAt = startAt,
                 endAt = endAt,
-                type = request.type ?: contest.type,
+                type = type,
+                inviteCode = inviteCode,
                 scoringType = request.scoringType ?: contest.scoringType,
                 scoreboardType = request.scoreboardType ?: contest.scoreboardType,
                 freezeMinutes = request.freezeMinutes ?: contest.freezeMinutes,
@@ -74,16 +109,7 @@ class AdminContestService(
 
         request.problems?.let { problems ->
             contestProblemRepository.deleteAllByContestId(contestId)
-            problems.forEachIndexed { index, problem ->
-                contestProblemRepository.save(
-                    ContestProblem(
-                        contestId = contestId,
-                        problemId = problem.problemId,
-                        order = index,
-                        score = problem.score,
-                    ),
-                )
-            }
+            saveProblems(contestId, problems)
         }
 
         return getContest(contestId)
@@ -91,12 +117,30 @@ class AdminContestService(
 
     @Transactional
     suspend fun deleteContest(contestId: UUID) {
-        val contest =
-            contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+        val contest = contestRepository.findById(contestId)
+            ?: throw BusinessException(ContestError.NOT_FOUND)
 
         contestProblemRepository.deleteAllByContestId(contestId)
         contestParticipantRepository.deleteAllByContestId(contestId)
         contestRepository.delete(contest)
+    }
+
+    private suspend fun saveProblems(contestId: UUID, problems: List<AdminContestProblemRequest>) {
+        problems.forEachIndexed { index, problem ->
+            contestProblemRepository.save(
+                ContestProblem(
+                    contestId = contestId,
+                    problemId = problem.problemId,
+                    order = index,
+                    score = problem.score,
+                ),
+            )
+        }
+    }
+
+    private fun generateInviteCode(): String = (1..8).map { INVITE_CODE_CHARS.random() }.joinToString("")
+
+    companion object {
+        private const val INVITE_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     }
 }

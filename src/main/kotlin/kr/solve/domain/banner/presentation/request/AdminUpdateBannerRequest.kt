@@ -2,7 +2,7 @@ package kr.solve.domain.banner.presentation.request
 
 import jakarta.validation.constraints.Size
 
-data class UpdateBannerRequest(
+data class AdminUpdateBannerRequest(
     @field:Size(max = 100)
     val name: String? = null,
     @field:Size(max = 500)

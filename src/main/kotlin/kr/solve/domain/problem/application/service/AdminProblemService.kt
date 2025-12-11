@@ -3,19 +3,22 @@ package kr.solve.domain.problem.application.service
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kr.solve.common.pagination.CursorPage
+import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.entity.ProblemExample
 import kr.solve.domain.problem.domain.error.ProblemError
 import kr.solve.domain.problem.domain.repository.ProblemExampleRepository
 import kr.solve.domain.problem.domain.repository.ProblemRepository
 import kr.solve.domain.problem.domain.repository.ProblemTagRepository
-import kr.solve.domain.problem.presentation.request.ExampleRequest
-import kr.solve.domain.problem.presentation.request.UpdateProblemRequest
+import kr.solve.domain.problem.presentation.request.AdminCreateProblemRequest
+import kr.solve.domain.problem.presentation.request.AdminExampleRequest
+import kr.solve.domain.problem.presentation.request.AdminUpdateProblemRequest
 import kr.solve.domain.problem.presentation.response.AdminProblemResponse
 import kr.solve.domain.problem.presentation.response.toAdminDetail
 import kr.solve.domain.problem.presentation.response.toAdminSummary
 import kr.solve.domain.tag.domain.repository.TagRepository
 import kr.solve.domain.user.domain.repository.UserRepository
 import kr.solve.global.error.BusinessException
+import kr.solve.global.security.userId
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -42,13 +45,11 @@ class AdminProblemService(
     }
 
     suspend fun getProblem(problemId: UUID): AdminProblemResponse.Detail {
-        val problem =
-            problemRepository.findById(problemId)
-                ?: throw BusinessException(ProblemError.NOT_FOUND)
+        val problem = problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NOT_FOUND)
 
-        val author =
-            userRepository.findById(problem.authorId)
-                ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
+        val author = userRepository.findById(problem.authorId)
+            ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
         val tags = getTagsByProblemId(problem.id)
 
@@ -60,13 +61,36 @@ class AdminProblemService(
     }
 
     @Transactional
-    suspend fun updateProblem(
-        problemId: UUID,
-        request: UpdateProblemRequest,
-    ): AdminProblemResponse.Detail {
-        val problem =
-            problemRepository.findById(problemId)
-                ?: throw BusinessException(ProblemError.NOT_FOUND)
+    suspend fun createProblem(request: AdminCreateProblemRequest): AdminProblemResponse.Detail {
+        val problem = problemRepository.save(
+            Problem(
+                title = request.title,
+                description = request.description,
+                inputFormat = request.inputFormat,
+                outputFormat = request.outputFormat,
+                difficulty = request.difficulty,
+                timeLimit = request.timeLimit,
+                memoryLimit = request.memoryLimit,
+                authorId = userId(),
+                isPublic = request.isPublic,
+                type = request.type,
+                checkerCode = request.checkerCode,
+                checkerLanguage = request.checkerLanguage,
+                interactorCode = request.interactorCode,
+                interactorLanguage = request.interactorLanguage,
+            ),
+        )
+
+        saveExamples(problem.id, request.examples)
+        saveTags(problem.id, request.tagIds)
+
+        return getProblem(problem.id)
+    }
+
+    @Transactional
+    suspend fun updateProblem(problemId: UUID, request: AdminUpdateProblemRequest): AdminProblemResponse.Detail {
+        val problem = problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NOT_FOUND)
 
         problemRepository.save(
             problem.copy(
@@ -101,19 +125,15 @@ class AdminProblemService(
 
     @Transactional
     suspend fun deleteProblem(problemId: UUID) {
-        val problem =
-            problemRepository.findById(problemId)
-                ?: throw BusinessException(ProblemError.NOT_FOUND)
+        val problem = problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NOT_FOUND)
 
         problemExampleRepository.deleteAllByProblemId(problemId)
         problemTagRepository.deleteAllByProblemId(problemId)
         problemRepository.delete(problem)
     }
 
-    private suspend fun saveExamples(
-        problemId: UUID,
-        examples: List<ExampleRequest>,
-    ) {
+    private suspend fun saveExamples(problemId: UUID, examples: List<AdminExampleRequest>) {
         examples.forEachIndexed { index, example ->
             problemExampleRepository.save(
                 ProblemExample(problemId = problemId, input = example.input, output = example.output, order = index),
@@ -121,10 +141,7 @@ class AdminProblemService(
         }
     }
 
-    private suspend fun saveTags(
-        problemId: UUID,
-        tagIds: List<UUID>,
-    ) {
+    private suspend fun saveTags(problemId: UUID, tagIds: List<UUID>) {
         tagIds.forEach { tagId -> problemTagRepository.insert(problemId, tagId) }
     }
 

@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.map
 import kr.solve.domain.banner.domain.entity.Banner
 import kr.solve.domain.banner.domain.error.BannerError
 import kr.solve.domain.banner.domain.repository.BannerRepository
-import kr.solve.domain.banner.presentation.request.CreateBannerRequest
-import kr.solve.domain.banner.presentation.request.UpdateBannerRequest
+import kr.solve.domain.banner.presentation.request.AdminCreateBannerRequest
+import kr.solve.domain.banner.presentation.request.AdminUpdateBannerRequest
 import kr.solve.domain.banner.presentation.response.AdminBannerResponse
 import kr.solve.domain.banner.presentation.response.toAdminResponse
 import kr.solve.global.error.BusinessException
@@ -28,7 +28,7 @@ class AdminBannerService(
     }
 
     @Transactional
-    suspend fun createBanner(request: CreateBannerRequest): AdminBannerResponse {
+    suspend fun createBanner(request: AdminCreateBannerRequest): AdminBannerResponse {
         val banner =
             bannerRepository.save(
                 Banner(
@@ -43,7 +43,7 @@ class AdminBannerService(
     @Transactional
     suspend fun updateBanner(
         bannerId: UUID,
-        request: UpdateBannerRequest,
+        request: AdminUpdateBannerRequest,
     ): AdminBannerResponse {
         val banner =
             bannerRepository.findById(bannerId)
