@@ -39,7 +39,7 @@ class ProblemQueryRepository(
         }
 
         if (type != null) {
-            conditions.add("p.problem_type = :type")
+            conditions.add("p.type = :type")
             params["type"] = type.name
         }
 
@@ -106,7 +106,7 @@ class ProblemQueryRepository(
             memoryLimit = get("memory_limit", java.lang.Integer::class.java)!!.toInt(),
             authorId = get("author_id", UUID::class.java)!!,
             isPublic = get("is_public", java.lang.Boolean::class.java)!!.booleanValue(),
-            type = ProblemType.valueOf(get("problem_type", String::class.java)!!),
+            type = ProblemType.valueOf(get("type", String::class.java)!!),
             checkerCode = get("checker_code", String::class.java),
             checkerLanguage = get("checker_language", String::class.java),
             interactorCode = get("interactor_code", String::class.java),
