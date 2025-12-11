@@ -9,5 +9,5 @@ import org.springframework.context.annotation.Profile
 @Profile("local")
 class H2ConsoleConfig {
     @Bean(initMethod = "start", destroyMethod = "stop")
-    fun h2WebServer(): Server = Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082")
+    fun h2WebServer(): Server = Server.createWebServer("-web", "-webAllowOthers", "-webPort", "9092")
 }
