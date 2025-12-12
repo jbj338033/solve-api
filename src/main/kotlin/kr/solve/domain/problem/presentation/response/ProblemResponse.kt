@@ -4,13 +4,14 @@ import io.swagger.v3.oas.annotations.media.Schema
 import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
+import kr.solve.domain.problem.domain.enums.SolveStatus
 import kr.solve.domain.user.domain.entity.User
 import java.time.LocalDateTime
 import java.util.UUID
 
 fun Problem.toSummary(
     author: User,
-    isSolved: Boolean? = null,
+    status: SolveStatus? = null,
 ) = ProblemResponse.Summary(
     id = id,
     title = title,
@@ -18,7 +19,7 @@ fun Problem.toSummary(
     author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
     isPublic = isPublic,
     type = type,
-    isSolved = isSolved,
+    status = status,
     createdAt = createdAt,
 )
 
@@ -26,7 +27,7 @@ fun Problem.toDetail(
     author: User,
     examples: List<ProblemResponse.Example>,
     tags: List<ProblemResponse.Tag>,
-    isSolved: Boolean? = null,
+    status: SolveStatus? = null,
 ) = ProblemResponse.Detail(
     id = id,
     title = title,
@@ -34,7 +35,7 @@ fun Problem.toDetail(
     author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
     isPublic = isPublic,
     type = type,
-    isSolved = isSolved,
+    status = status,
     createdAt = createdAt,
     description = description,
     inputFormat = inputFormat,
@@ -95,8 +96,8 @@ object ProblemResponse {
         val isPublic: Boolean,
         @Schema(description = "문제 유형")
         val type: ProblemType,
-        @Schema(description = "해결 여부 (로그인 시)")
-        val isSolved: Boolean?,
+        @Schema(description = "풀이 상태 (로그인 시)")
+        val status: SolveStatus?,
         @Schema(description = "생성일시")
         val createdAt: LocalDateTime?,
     )
@@ -115,8 +116,8 @@ object ProblemResponse {
         val isPublic: Boolean,
         @Schema(description = "문제 유형")
         val type: ProblemType,
-        @Schema(description = "해결 여부 (로그인 시)")
-        val isSolved: Boolean?,
+        @Schema(description = "풀이 상태 (로그인 시)")
+        val status: SolveStatus?,
         @Schema(description = "생성일시")
         val createdAt: LocalDateTime?,
         @Schema(description = "문제 설명")

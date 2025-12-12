@@ -8,6 +8,7 @@ import kr.solve.domain.problem.domain.entity.ProblemExample
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemSort
 import kr.solve.domain.problem.domain.enums.ProblemType
+import kr.solve.domain.problem.domain.enums.SolveStatus
 import kr.solve.domain.problem.domain.error.ProblemError
 import kr.solve.domain.problem.domain.repository.ProblemExampleRepository
 import kr.solve.domain.problem.domain.repository.ProblemQueryRepository
@@ -63,14 +64,24 @@ class ProblemService(
 
         val authorMap = userRepository.findAllByIdIn(problems.map { it.authorId }).toList().associateBy { it.id }
         val userId = userIdOrNull()
+        val problemIds = problems.map { it.id }.toTypedArray()
         val solvedIds = userId?.let {
-            val ids = problems.map { p -> p.id }.toTypedArray()
-            submissionRepository.findSolvedProblemIdsByUserIdAndProblemIds(it, ids).toList().toSet()
+            submissionRepository.findSolvedProblemIdsByUserIdAndProblemIds(it, problemIds).toList().toSet()
+        }
+        val attemptedIds = userId?.let {
+            submissionRepository.findAttemptedProblemIdsByUserIdAndProblemIds(it, problemIds).toList().toSet()
         }
 
         return CursorPage.of(problems, limit) { problem ->
             val author = authorMap[problem.authorId] ?: return@of null
-            problem.toSummary(author, solvedIds?.let { problem.id in it })
+            val status = userId?.let {
+                when {
+                    solvedIds?.contains(problem.id) == true -> SolveStatus.SOLVED
+                    attemptedIds?.contains(problem.id) == true -> SolveStatus.ATTEMPTED
+                    else -> null
+                }
+            }
+            problem.toSummary(author, status)
         }
     }
 
@@ -85,15 +96,19 @@ class ProblemService(
                 ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
         val tags = getTagsByProblemId(problem.id)
-        val isSolved = userIdOrNull()?.let {
-            submissionRepository.existsByUserIdAndProblemIdAndResult(it, problemId, JudgeResult.ACCEPTED)
+        val status = userIdOrNull()?.let { userId ->
+            when {
+                submissionRepository.existsByUserIdAndProblemIdAndResult(userId, problemId, JudgeResult.ACCEPTED) -> SolveStatus.SOLVED
+                submissionRepository.existsByUserIdAndProblemId(userId, problemId) -> SolveStatus.ATTEMPTED
+                else -> null
+            }
         }
 
         return problem.toDetail(
             author,
             examples.map { ProblemResponse.Example(it.input, it.output, it.order) },
             tags,
-            isSolved,
+            status,
         )
     }
 
