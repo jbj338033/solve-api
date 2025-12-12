@@ -3,7 +3,6 @@ package kr.solve.infra.judge
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import kr.solve.domain.submission.domain.enums.JudgeResult
-import java.util.UUID
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes(
@@ -12,7 +11,7 @@ import java.util.UUID
 )
 sealed class JudgeEvent {
     data class Progress(
-        val testcaseId: UUID,
+        val testcaseId: Long,
         val result: JudgeResult,
         val time: Int,
         val memory: Int,

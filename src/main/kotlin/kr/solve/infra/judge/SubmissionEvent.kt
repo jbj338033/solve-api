@@ -4,14 +4,13 @@ import kr.solve.domain.submission.domain.enums.JudgeResult
 import kr.solve.domain.submission.domain.enums.Language
 import kr.solve.domain.submission.domain.enums.SubmissionStatus
 import java.time.LocalDateTime
-import java.util.UUID
 
 data class SubmissionEvent(
     val type: String,
     val data: Data,
 ) {
     data class Data(
-        val id: UUID,
+        val id: Long?,
         val problem: Problem,
         val contest: Contest?,
         val user: User,
@@ -25,17 +24,17 @@ data class SubmissionEvent(
     )
 
     data class Problem(
-        val id: UUID,
+        val id: Long?,
         val title: String,
     )
 
     data class Contest(
-        val id: UUID,
+        val id: Long?,
         val title: String,
     )
 
     data class User(
-        val id: UUID,
+        val id: Long?,
         val username: String,
         val displayName: String,
         val profileImage: String,
