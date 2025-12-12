@@ -105,8 +105,8 @@ class ExecutionWebSocketHandler(
         try {
             val (execId, events) =
                 executionService.startExecution(
-                    problemId = initData.problemId.toLong(),
-                    language = Language.valueOf(initData.language),
+                    problemId = initData.problemId,
+                    language = initData.language,
                     code = initData.code,
                 )
             executionIdRef.set(execId)
@@ -171,16 +171,8 @@ class ExecutionWebSocketHandler(
         sink.tryEmitNext(json)
     }
 
-    private fun parseInitData(data: Any?): ExecutionMessage.InitData? {
-        val map = data as? Map<*, *> ?: return null
-        return try {
-            ExecutionMessage.InitData(
-                problemId = map["problemId"]?.toString() ?: return null,
-                language = map["language"] as? String ?: return null,
-                code = map["code"] as? String ?: return null,
-            )
-        } catch (_: Exception) {
-            null
-        }
-    }
+    private fun parseInitData(data: Any?): ExecutionMessage.InitData? =
+        runCatching {
+            jsonMapper.convertValue(data, ExecutionMessage.InitData::class.java)
+        }.getOrNull()
 }
