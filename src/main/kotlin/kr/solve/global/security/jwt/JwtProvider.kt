@@ -10,7 +10,6 @@ import kr.solve.domain.user.domain.enums.UserRole
 import kr.solve.global.error.BusinessException
 import org.springframework.stereotype.Component
 import java.util.Date
-import java.util.UUID
 
 @Component
 class JwtProvider(
@@ -25,22 +24,22 @@ class JwtProvider(
     }
 
     fun createAccessToken(
-        userId: UUID,
+        userId: Long,
         role: UserRole,
     ): String = createToken(userId, role, jwtProperties.accessTokenExpiration, JwtType.ACCESS)
 
-    fun createRefreshToken(userId: UUID): String = createToken(userId, null, jwtProperties.refreshTokenExpiration, JwtType.REFRESH)
+    fun createRefreshToken(userId: Long): String = createToken(userId, null, jwtProperties.refreshTokenExpiration, JwtType.REFRESH)
 
     fun validateToken(token: String): Boolean = runCatching { parser.parseSignedClaims(token) }.isSuccess
 
-    fun getUserId(token: String): UUID = UUID.fromString(parse(token).subject)
+    fun getUserId(token: String): Long = parse(token).subject.toLong()
 
     fun getType(token: String): JwtType = JwtType.valueOf(parse(token)[CLAIM_TYPE] as String)
 
     fun getRole(token: String): UserRole = UserRole.valueOf(parse(token)[CLAIM_ROLE] as String)
 
     private fun createToken(
-        userId: UUID,
+        userId: Long,
         role: UserRole?,
         expiration: Long,
         type: JwtType,
