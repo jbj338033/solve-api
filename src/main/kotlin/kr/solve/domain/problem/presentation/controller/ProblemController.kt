@@ -50,10 +50,10 @@ class ProblemController(
     )
 
     @Operation(summary = "문제 상세 조회")
-    @GetMapping("/{problemId}")
+    @GetMapping("/{problemNumber}")
     suspend fun getProblem(
-        @PathVariable problemId: UUID,
-    ) = problemService.getProblem(problemId)
+        @PathVariable problemNumber: Int,
+    ) = problemService.getProblem(problemNumber)
 
     @Operation(summary = "문제 생성", security = [SecurityRequirement(name = "bearerAuth")])
     @PostMapping
@@ -63,16 +63,16 @@ class ProblemController(
     ) = problemService.createProblem(request)
 
     @Operation(summary = "문제 수정", security = [SecurityRequirement(name = "bearerAuth")])
-    @PatchMapping("/{problemId}")
+    @PatchMapping("/{problemNumber}")
     suspend fun updateProblem(
-        @PathVariable problemId: UUID,
+        @PathVariable problemNumber: Int,
         @Valid @RequestBody request: UpdateProblemRequest,
-    ) = problemService.updateProblem(problemId, request)
+    ) = problemService.updateProblem(problemNumber, request)
 
     @Operation(summary = "문제 삭제", security = [SecurityRequirement(name = "bearerAuth")])
-    @DeleteMapping("/{problemId}")
+    @DeleteMapping("/{problemNumber}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteProblem(
-        @PathVariable problemId: UUID,
-    ) = problemService.deleteProblem(problemId)
+        @PathVariable problemNumber: Int,
+    ) = problemService.deleteProblem(problemNumber)
 }

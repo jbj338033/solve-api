@@ -14,6 +14,7 @@ fun Problem.toSummary(
     status: SolveStatus? = null,
 ) = ProblemResponse.Summary(
     id = id,
+    number = number,
     title = title,
     difficulty = difficulty,
     author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
@@ -30,6 +31,7 @@ fun Problem.toDetail(
     status: SolveStatus? = null,
 ) = ProblemResponse.Detail(
     id = id,
+    number = number,
     title = title,
     difficulty = difficulty,
     author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
@@ -86,6 +88,8 @@ object ProblemResponse {
     data class Summary(
         @Schema(description = "문제 ID")
         val id: UUID,
+        @Schema(description = "문제 번호", example = "1000")
+        val number: Int,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
         @Schema(description = "문제 난이도")
@@ -106,6 +110,8 @@ object ProblemResponse {
     data class Detail(
         @Schema(description = "문제 ID")
         val id: UUID,
+        @Schema(description = "문제 번호", example = "1000")
+        val number: Int,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
         @Schema(description = "문제 난이도")

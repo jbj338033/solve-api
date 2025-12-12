@@ -9,6 +9,8 @@ import kr.solve.domain.problem.domain.enums.ProblemType
 import java.util.UUID
 
 data class UpdateProblemRequest(
+    @field:Min(1)
+    val number: Int? = null,
     @field:Size(max = 200)
     val title: String? = null,
     val description: String? = null,

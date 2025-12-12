@@ -85,12 +85,16 @@ class ProblemService(
         }
     }
 
-    suspend fun getProblem(problemId: UUID): ProblemResponse.Detail {
-        val problem = findById(problemId)
+    suspend fun getProblem(problemNumber: Int): ProblemResponse.Detail {
+        val problem = findByNumber(problemNumber)
         if (!problem.isPublic) {
             throw BusinessException(ProblemError.ACCESS_DENIED)
         }
 
+        return getProblemDetail(problem)
+    }
+
+    private suspend fun getProblemDetail(problem: Problem): ProblemResponse.Detail {
         val author =
             userRepository.findById(problem.authorId)
                 ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
@@ -98,8 +102,8 @@ class ProblemService(
         val tags = getTagsByProblemId(problem.id)
         val status = userIdOrNull()?.let { userId ->
             when {
-                submissionRepository.existsByUserIdAndProblemIdAndResult(userId, problemId, JudgeResult.ACCEPTED) -> SolveStatus.SOLVED
-                submissionRepository.existsByUserIdAndProblemId(userId, problemId) -> SolveStatus.ATTEMPTED
+                submissionRepository.existsByUserIdAndProblemIdAndResult(userId, problem.id, JudgeResult.ACCEPTED) -> SolveStatus.SOLVED
+                submissionRepository.existsByUserIdAndProblemId(userId, problem.id) -> SolveStatus.ATTEMPTED
                 else -> null
             }
         }
@@ -114,9 +118,14 @@ class ProblemService(
 
     @Transactional
     suspend fun createProblem(request: CreateProblemRequest): ProblemResponse.Detail {
+        if (problemRepository.existsByNumber(request.number)) {
+            throw BusinessException(ProblemError.NUMBER_ALREADY_EXISTS)
+        }
+
         val problem =
             problemRepository.save(
                 Problem(
+                    number = request.number,
                     title = request.title,
                     description = request.description,
                     inputFormat = request.inputFormat,
@@ -152,15 +161,22 @@ class ProblemService(
 
     @Transactional
     suspend fun updateProblem(
-        problemId: UUID,
+        problemNumber: Int,
         request: UpdateProblemRequest,
     ): ProblemResponse.Detail {
-        val problem = findById(problemId)
+        val problem = findByNumber(problemNumber)
         validateOwner(problem)
+
+        if (request.number != null && request.number != problem.number) {
+            if (problemRepository.existsByNumber(request.number)) {
+                throw BusinessException(ProblemError.NUMBER_ALREADY_EXISTS)
+            }
+        }
 
         val updated =
             problemRepository.save(
                 problem.copy(
+                    number = request.number ?: problem.number,
                     title = request.title ?: problem.title,
                     description = request.description ?: problem.description,
                     inputFormat = request.inputFormat ?: problem.inputFormat,
@@ -178,13 +194,13 @@ class ProblemService(
             )
 
         request.examples?.let {
-            problemExampleRepository.deleteAllByProblemId(problemId)
-            saveExamples(problemId, it)
+            problemExampleRepository.deleteAllByProblemId(problem.id)
+            saveExamples(problem.id, it)
         }
 
         request.tagIds?.let {
-            problemTagRepository.deleteAllByProblemId(problemId)
-            saveTags(problemId, it)
+            problemTagRepository.deleteAllByProblemId(problem.id)
+            saveTags(problem.id, it)
         }
 
         val author =
@@ -201,16 +217,16 @@ class ProblemService(
     }
 
     @Transactional
-    suspend fun deleteProblem(problemId: UUID) {
-        val problem = findById(problemId)
+    suspend fun deleteProblem(problemNumber: Int) {
+        val problem = findByNumber(problemNumber)
         validateOwner(problem)
-        problemExampleRepository.deleteAllByProblemId(problemId)
-        problemTagRepository.deleteAllByProblemId(problemId)
+        problemExampleRepository.deleteAllByProblemId(problem.id)
+        problemTagRepository.deleteAllByProblemId(problem.id)
         problemRepository.delete(problem)
     }
 
-    private suspend fun findById(problemId: UUID): Problem =
-        problemRepository.findById(problemId) ?: throw BusinessException(ProblemError.NOT_FOUND)
+    private suspend fun findByNumber(problemNumber: Int): Problem =
+        problemRepository.findByNumber(problemNumber) ?: throw BusinessException(ProblemError.NOT_FOUND)
 
     private suspend fun validateOwner(problem: Problem) {
         if (problem.authorId != userId()) throw BusinessException(ProblemError.ACCESS_DENIED)

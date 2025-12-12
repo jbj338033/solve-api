@@ -15,8 +15,10 @@ import kr.solve.domain.problem.domain.repository.ProblemTestCaseRepository
 import kr.solve.domain.submission.domain.entity.Submission
 import kr.solve.domain.submission.domain.entity.SubmissionResult
 import kr.solve.domain.submission.domain.enums.JudgeResult
+import kr.solve.domain.submission.domain.enums.Language
 import kr.solve.domain.submission.domain.enums.SubmissionStatus
 import kr.solve.domain.submission.domain.error.SubmissionError
+import kr.solve.domain.submission.domain.repository.SubmissionQueryRepository
 import kr.solve.domain.submission.domain.repository.SubmissionRepository
 import kr.solve.domain.submission.domain.repository.SubmissionResultRepository
 import kr.solve.domain.submission.presentation.request.CreateSubmissionRequest
@@ -41,6 +43,7 @@ private val log = KotlinLogging.logger {}
 @Service
 class SubmissionService(
     private val submissionRepository: SubmissionRepository,
+    private val submissionQueryRepository: SubmissionQueryRepository,
     private val submissionResultRepository: SubmissionResultRepository,
     private val problemRepository: ProblemRepository,
     private val problemTestCaseRepository: ProblemTestCaseRepository,
@@ -56,8 +59,24 @@ class SubmissionService(
     suspend fun getSubmissions(
         cursor: UUID?,
         limit: Int,
+        username: String? = null,
+        problemId: UUID? = null,
+        language: Language? = null,
+        result: JudgeResult? = null,
     ): CursorPage<SubmissionResponse.Summary> {
-        val submissions = submissionRepository.findAllByOrderByIdDesc(cursor, limit + 1).toList()
+        val userId = username?.let {
+            userRepository.findByUsername(it)?.id
+                ?: throw BusinessException(SubmissionError.USER_NOT_FOUND)
+        }
+
+        val submissions = submissionQueryRepository.findWithFilters(
+            cursor = cursor,
+            limit = limit + 1,
+            userId = userId,
+            problemId = problemId,
+            language = language,
+            result = result,
+        ).toList()
         if (submissions.isEmpty()) return CursorPage(emptyList(), false)
 
         val problemIds = submissions.map { it.problemId }.distinct()

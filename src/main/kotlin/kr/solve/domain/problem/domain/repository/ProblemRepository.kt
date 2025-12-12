@@ -7,6 +7,9 @@ import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import java.util.UUID
 
 interface ProblemRepository : CoroutineCrudRepository<Problem, UUID> {
+    suspend fun findByNumber(number: Int): Problem?
+
+    suspend fun existsByNumber(number: Int): Boolean
     @Query(
         """
         SELECT * FROM problems

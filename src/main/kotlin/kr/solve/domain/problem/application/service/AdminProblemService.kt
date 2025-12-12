@@ -73,6 +73,7 @@ class AdminProblemService(
         val problem =
             problemRepository.save(
                 Problem(
+                    number = request.number,
                     title = request.title,
                     description = request.description,
                     inputFormat = request.inputFormat,

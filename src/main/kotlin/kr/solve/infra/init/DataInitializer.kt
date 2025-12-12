@@ -190,6 +190,7 @@ class DataInitializer(
         val problems =
             listOf(
                 Problem(
+                    number = 1000,
                     title = "A+B",
                     description = "두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하시오.",
                     inputFormat = "첫째 줄에 A와 B가 주어진다. (0 < A, B < 10)",
@@ -202,6 +203,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1001,
                     title = "피보나치 수",
                     description = """n번째 피보나치 수를 구하는 프로그램을 작성하시오.
 
@@ -219,6 +221,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1002,
                     title = "팰린드롬 판별",
                     description = """주어진 문자열이 팰린드롬인지 판별하는 프로그램을 작성하시오.
 
@@ -233,6 +236,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1003,
                     title = "최단 경로",
                     description = """방향 그래프가 주어지면 주어진 시작점에서 다른 모든 정점으로의 최단 경로를 구하는 프로그램을 작성하시오.
 
@@ -249,6 +253,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1004,
                     title = "이진 탐색",
                     description = "오름차순으로 정렬된 N개의 정수가 들어있는 배열에서 특정 수 X가 존재하는지 확인하는 프로그램을 작성하시오.",
                     inputFormat = """첫째 줄에 N과 X가 주어진다. (1 ≤ N ≤ 100,000, -10^9 ≤ X ≤ 10^9)
@@ -262,6 +267,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1005,
                     title = "동전 교환",
                     description = """N가지 종류의 동전이 있다. 각각의 동전이 나타내는 가치는 다르다. 이 동전을 적당히 사용해서, 그 가치의 합이 K원이 되도록 하고 싶다.
 
@@ -277,6 +283,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1006,
                     title = "구간 합 구하기",
                     description = "N개의 정수로 이루어진 수열이 있다. M개의 쿼리가 주어지고, 각 쿼리는 i번째 수부터 j번째 수까지의 합을 구하는 것이다.",
                     inputFormat = """첫째 줄에 N과 M이 주어진다. (1 ≤ N, M ≤ 100,000)
@@ -291,6 +298,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1007,
                     title = "소수 판별",
                     description = "주어진 정수 N이 소수인지 판별하는 프로그램을 작성하시오.",
                     inputFormat = "첫째 줄에 정수 N이 주어진다. (2 ≤ N ≤ 10^12)",
@@ -303,6 +311,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1008,
                     title = "문자열 압축",
                     description = """문자열을 1개 이상의 단위로 잘라서 압축하여 더 짧은 문자열로 표현할 수 있는지 알아보려 합니다.
 
@@ -317,6 +326,7 @@ class DataInitializer(
                     type = ProblemType.STANDARD,
                 ),
                 Problem(
+                    number = 1009,
                     title = "최소 스패닝 트리",
                     description = """그래프가 주어졌을 때, 그 그래프의 최소 스패닝 트리를 구하는 프로그램을 작성하시오.
 
