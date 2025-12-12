@@ -4,11 +4,10 @@ import kr.solve.domain.user.domain.enums.Gender
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Table
 import java.time.LocalDate
-import java.util.UUID
 
 @Table("user_settings")
 data class UserSettings(
-    @Id val userId: UUID,
+    @Id val userId: Long,
     val country: String? = null,
     val countryVisible: Boolean = true,
     val birthDate: LocalDate? = null,
