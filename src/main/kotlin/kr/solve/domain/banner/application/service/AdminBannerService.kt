@@ -12,7 +12,6 @@ import kr.solve.domain.banner.presentation.response.toAdminResponse
 import kr.solve.global.error.BusinessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class AdminBannerService(
@@ -20,7 +19,7 @@ class AdminBannerService(
 ) {
     fun getBanners(): Flow<AdminBannerResponse> = bannerRepository.findAllByOrderByNameAsc().map { it.toAdminResponse() }
 
-    suspend fun getBanner(bannerId: UUID): AdminBannerResponse {
+    suspend fun getBanner(bannerId: Long): AdminBannerResponse {
         val banner =
             bannerRepository.findById(bannerId)
                 ?: throw BusinessException(BannerError.NOT_FOUND)
@@ -40,7 +39,7 @@ class AdminBannerService(
 
     @Transactional
     suspend fun updateBanner(
-        bannerId: UUID,
+        bannerId: Long,
         request: AdminUpdateBannerRequest,
     ) {
         val banner =
@@ -57,7 +56,7 @@ class AdminBannerService(
     }
 
     @Transactional
-    suspend fun deleteBanner(bannerId: UUID) {
+    suspend fun deleteBanner(bannerId: Long) {
         val banner =
             bannerRepository.findById(bannerId)
                 ?: throw BusinessException(BannerError.NOT_FOUND)

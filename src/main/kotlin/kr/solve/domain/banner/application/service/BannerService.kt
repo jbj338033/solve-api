@@ -15,7 +15,6 @@ import kr.solve.global.error.BusinessException
 import kr.solve.global.security.userId
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class BannerService(
@@ -37,7 +36,7 @@ class BannerService(
     }
 
     @Transactional
-    suspend fun selectBanner(bannerId: UUID): BannerResponse.Summary {
+    suspend fun selectBanner(bannerId: Long): BannerResponse.Summary {
         val userId = userId()
 
         val banner =

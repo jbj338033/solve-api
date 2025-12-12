@@ -20,7 +20,6 @@ import kr.solve.global.error.BusinessException
 import kr.solve.global.security.userId
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class AdminContestService(
@@ -30,20 +29,20 @@ class AdminContestService(
     private val problemRepository: ProblemRepository,
 ) {
     suspend fun getContests(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): CursorPage<AdminContestResponse.Summary> {
         val contests = contestRepository.findAllByOrderByIdDesc(cursor, limit + 1).toList()
         return CursorPage.of(contests, limit) { it.toAdminSummary() }
     }
 
-    suspend fun getContest(contestId: UUID): AdminContestResponse.Detail {
+    suspend fun getContest(contestId: Long): AdminContestResponse.Detail {
         val contest =
             contestRepository.findById(contestId)
                 ?: throw BusinessException(ContestError.NOT_FOUND)
 
         val contestProblems = contestProblemRepository.findAllByContestIdOrderByOrder(contestId).toList()
-        val problemMap = problemRepository.findAllByIdIn(contestProblems.map { it.problemId }).toList().associateBy { it.id }
+        val problemMap = problemRepository.findAllByIdIn(contestProblems.map { it.problemId }).toList().associateBy { it.id!! }
         val participantCount = contestParticipantRepository.countByContestId(contestId)
 
         return contest.toAdminDetail(contestProblems, problemMap, participantCount.toInt())
@@ -72,12 +71,12 @@ class AdminContestService(
                 ),
             )
 
-        saveProblems(contest.id, request.problems)
+        saveProblems(contest.id!!, request.problems)
     }
 
     @Transactional
     suspend fun updateContest(
-        contestId: UUID,
+        contestId: Long,
         request: AdminUpdateContestRequest,
     ) {
         val contest =
@@ -119,7 +118,7 @@ class AdminContestService(
     }
 
     @Transactional
-    suspend fun deleteContest(contestId: UUID) {
+    suspend fun deleteContest(contestId: Long) {
         val contest =
             contestRepository.findById(contestId)
                 ?: throw BusinessException(ContestError.NOT_FOUND)
@@ -130,7 +129,7 @@ class AdminContestService(
     }
 
     private suspend fun saveProblems(
-        contestId: UUID,
+        contestId: Long,
         problems: List<AdminContestProblemRequest>,
     ) {
         problems.forEachIndexed { index, problem ->

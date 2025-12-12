@@ -25,7 +25,6 @@ import kr.solve.global.security.userIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Service
 class ContestService(
@@ -36,14 +35,14 @@ class ContestService(
     private val userRepository: UserRepository,
 ) {
     suspend fun getContests(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): CursorPage<ContestResponse.Summary> {
         val contests = contestRepository.findAllByOrderByIdDesc(cursor, limit + 1).toList()
         return CursorPage.of(contests, limit) { it.toSummary() }
     }
 
-    suspend fun getContest(contestId: UUID): ContestResponse.Detail {
+    suspend fun getContest(contestId: Long): ContestResponse.Detail {
         val contest =
             contestRepository.findById(contestId)
                 ?: throw BusinessException(ContestError.NOT_FOUND)
@@ -56,7 +55,7 @@ class ContestService(
                 problemRepository
                     .findAllByIdIn(contestProblems.map { it.problemId })
                     .toList()
-                    .associateBy { it.id }
+                    .associateBy { it.id!! }
             } else {
                 emptyMap()
             }
@@ -98,7 +97,7 @@ class ContestService(
         request.problems.forEachIndexed { index, problem ->
             contestProblemRepository.save(
                 ContestProblem(
-                    contestId = contest.id,
+                    contestId = contest.id!!,
                     problemId = problem.problemId,
                     order = index,
                     score = problem.score,
@@ -109,7 +108,7 @@ class ContestService(
 
     @Transactional
     suspend fun updateContest(
-        contestId: UUID,
+        contestId: Long,
         request: UpdateContestRequest,
     ) {
         val contest =
@@ -164,7 +163,7 @@ class ContestService(
     }
 
     @Transactional
-    suspend fun deleteContest(contestId: UUID) {
+    suspend fun deleteContest(contestId: Long) {
         val contest =
             contestRepository.findById(contestId)
                 ?: throw BusinessException(ContestError.NOT_FOUND)
@@ -179,7 +178,7 @@ class ContestService(
 
     @Transactional
     suspend fun joinContest(
-        contestId: UUID,
+        contestId: Long,
         request: JoinContestRequest,
     ) {
         val contest =
@@ -192,26 +191,26 @@ class ContestService(
             throw BusinessException(ContestError.INVALID_INVITE_CODE)
         }
 
-        if (contestParticipantRepository.existsByContestIdAndUserId(contest.id, userId)) {
+        if (contestParticipantRepository.existsByContestIdAndUserId(contest.id!!, userId)) {
             throw BusinessException(ContestError.ALREADY_PARTICIPATING)
         }
 
-        contestParticipantRepository.save(ContestParticipant(contestId = contest.id, userId = userId))
+        contestParticipantRepository.save(ContestParticipant(contestId = contest.id!!, userId = userId))
     }
 
     @Transactional
-    suspend fun leaveContest(contestId: UUID) {
+    suspend fun leaveContest(contestId: Long) {
         val contest =
             contestRepository.findById(contestId)
                 ?: throw BusinessException(ContestError.NOT_FOUND)
 
         val userId = userId()
 
-        if (!contestParticipantRepository.existsByContestIdAndUserId(contest.id, userId)) {
+        if (!contestParticipantRepository.existsByContestIdAndUserId(contest.id!!, userId)) {
             throw BusinessException(ContestError.NOT_PARTICIPATING)
         }
 
-        contestParticipantRepository.deleteByContestIdAndUserId(contest.id, userId)
+        contestParticipantRepository.deleteByContestIdAndUserId(contest.id!!, userId)
     }
 
     private fun generateInviteCode(): String = (1..8).map { INVITE_CODE_CHARS.random() }.joinToString("")

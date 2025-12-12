@@ -10,7 +10,6 @@ import kr.solve.domain.tag.presentation.response.toAdminResponse
 import kr.solve.global.error.BusinessException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class AdminTagService(
@@ -28,7 +27,7 @@ class AdminTagService(
 
     @Transactional
     suspend fun updateTag(
-        tagId: UUID,
+        tagId: Long,
         name: String,
     ) {
         val tag =
@@ -43,7 +42,7 @@ class AdminTagService(
     }
 
     @Transactional
-    suspend fun deleteTag(tagId: UUID) {
+    suspend fun deleteTag(tagId: Long) {
         val tag =
             tagRepository.findById(tagId)
                 ?: throw BusinessException(TagError.NOT_FOUND)

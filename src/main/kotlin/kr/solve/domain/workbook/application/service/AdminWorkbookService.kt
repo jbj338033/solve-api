@@ -18,7 +18,6 @@ import kr.solve.global.error.BusinessException
 import kr.solve.global.security.userId
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class AdminWorkbookService(
@@ -28,7 +27,7 @@ class AdminWorkbookService(
     private val userRepository: UserRepository,
 ) {
     suspend fun getWorkbooks(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): CursorPage<AdminWorkbookResponse.Summary> {
         val workbooks = workbookRepository.findAllByOrderByIdDesc(cursor, limit + 1).toList()
@@ -40,7 +39,7 @@ class AdminWorkbookService(
         }
     }
 
-    suspend fun getWorkbook(workbookId: UUID): AdminWorkbookResponse.Detail {
+    suspend fun getWorkbook(workbookId: Long): AdminWorkbookResponse.Detail {
         val workbook =
             workbookRepository.findById(workbookId)
                 ?: throw BusinessException(WorkbookError.NOT_FOUND)
@@ -49,11 +48,11 @@ class AdminWorkbookService(
             userRepository.findById(workbook.authorId)
                 ?: throw BusinessException(WorkbookError.AUTHOR_NOT_FOUND)
         val workbookProblems = workbookProblemRepository.findAllByWorkbookIdOrderByOrder(workbookId).toList()
-        val problemMap = problemRepository.findAllByIdIn(workbookProblems.map { it.problemId }).toList().associateBy { it.id }
+        val problemMap = problemRepository.findAllByIdIn(workbookProblems.map { it.problemId }).toList().associateBy { it.id!! }
         val problems =
             workbookProblems.mapNotNull { wp ->
                 problemMap[wp.problemId]?.let {
-                    AdminWorkbookResponse.Problem(it.id, it.number, it.title, it.difficulty, it.type)
+                    AdminWorkbookResponse.Problem(it.id!!, it.title, it.difficulty, it.type)
                 }
             }
 
@@ -72,13 +71,13 @@ class AdminWorkbookService(
             )
 
         request.problemIds.forEachIndexed { index, problemId ->
-            workbookProblemRepository.save(WorkbookProblem(workbookId = workbook.id, problemId = problemId, order = index))
+            workbookProblemRepository.save(WorkbookProblem(workbookId = workbook.id!!, problemId = problemId, order = index))
         }
     }
 
     @Transactional
     suspend fun updateWorkbook(
-        workbookId: UUID,
+        workbookId: Long,
         request: AdminUpdateWorkbookRequest,
     ) {
         val workbook =
@@ -101,7 +100,7 @@ class AdminWorkbookService(
     }
 
     @Transactional
-    suspend fun deleteWorkbook(workbookId: UUID) {
+    suspend fun deleteWorkbook(workbookId: Long) {
         val workbook =
             workbookRepository.findById(workbookId)
                 ?: throw BusinessException(WorkbookError.NOT_FOUND)

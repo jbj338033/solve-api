@@ -46,10 +46,10 @@ class AuthService(
                 register(provider, info)
             }
 
-        val providers = userOAuthRepository.findAllByUserId(user.id).map { it.provider }
-        val accessToken = jwtProvider.createAccessToken(user.id, user.role)
-        val refreshToken = jwtProvider.createRefreshToken(user.id)
-        refreshTokenRepository.save(refreshToken, user.id)
+        val providers = userOAuthRepository.findAllByUserId(user.id!!).map { it.provider }
+        val accessToken = jwtProvider.createAccessToken(user.id!!, user.role)
+        val refreshToken = jwtProvider.createRefreshToken(user.id!!)
+        refreshTokenRepository.save(refreshToken, user.id!!)
 
         return LoginResponse(accessToken, refreshToken, user.toMe(providers))
     }
@@ -100,7 +100,7 @@ class AuthService(
                     role = UserRole.USER,
                 ),
             )
-        userOAuthRepository.save(UserOAuth(userId = user.id, provider = provider, providerId = info.providerId))
+        userOAuthRepository.save(UserOAuth(userId = user.id!!, provider = provider, providerId = info.providerId))
         return user
     }
 

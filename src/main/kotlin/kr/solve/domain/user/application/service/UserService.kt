@@ -59,7 +59,7 @@ class UserService(
             userRepository.findByUsername(username)
                 ?: throw BusinessException(UserError.NOT_FOUND)
         val banner = user.selectedBannerId?.let { bannerRepository.findById(it) }
-        val settings = userSettingsRepository.findById(user.id)
+        val settings = userSettingsRepository.findById(user.id!!)
         return user.toProfile(banner, settings)
     }
 
@@ -132,7 +132,7 @@ class UserService(
             }
 
         return userActivityRepository
-            .findAllByUserIdAndDateBetween(user.id, startDate, endDate)
+            .findAllByUserIdAndDateBetween(user.id!!, startDate, endDate)
             .toList()
             .map { it.toResponse() }
     }
@@ -146,7 +146,7 @@ class UserService(
                 ?: throw BusinessException(UserError.NOT_FOUND)
 
         return userRatingHistoryRepository
-            .findAllByUserIdAndRatingTypeOrderByRecordedAtDesc(user.id, type)
+            .findAllByUserIdAndRatingTypeOrderByRecordedAtDesc(user.id!!, type)
             .toList()
             .map { it.toResponse() }
     }
@@ -156,11 +156,11 @@ class UserService(
             userRepository.findByUsername(username)
                 ?: throw BusinessException(UserError.NOT_FOUND)
 
-        val solvedProblemIds = submissionRepository.findSolvedProblemIdsByUserId(user.id).toList()
-        val submissionCount = submissionRepository.countByUserId(user.id)
+        val solvedProblemIds = submissionRepository.findSolvedProblemIdsByUserId(user.id!!).toList()
+        val submissionCount = submissionRepository.countByUserId(user.id!!)
 
         if (solvedProblemIds.isEmpty()) {
-            val submissions = submissionRepository.findAllByUserIdOrderByIdDesc(user.id, null, 10000).toList()
+            val submissions = submissionRepository.findAllByUserIdOrderByIdDesc(user.id!!, null, 10000).toList()
             return UserResponse.Stats(
                 solvedCount = 0,
                 submissionCount = submissionCount.toInt(),
@@ -184,7 +184,7 @@ class UserService(
                 .filter { it.name.isNotEmpty() }
                 .sortedByDescending { it.count }
 
-        val submissions = submissionRepository.findAllByUserIdOrderByIdDesc(user.id, null, 10000).toList()
+        val submissions = submissionRepository.findAllByUserIdOrderByIdDesc(user.id!!, null, 10000).toList()
         val languageDistribution = submissions.groupingBy { it.language }.eachCount()
 
         return UserResponse.Stats(

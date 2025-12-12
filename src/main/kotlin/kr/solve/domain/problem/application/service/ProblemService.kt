@@ -29,7 +29,6 @@ import kr.solve.global.security.userId
 import kr.solve.global.security.userIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class ProblemService(
@@ -42,12 +41,12 @@ class ProblemService(
     private val submissionRepository: SubmissionRepository,
 ) {
     suspend fun getProblems(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
         difficulties: List<ProblemDifficulty>?,
         type: ProblemType?,
         query: String?,
-        tagIds: List<UUID>?,
+        tagIds: List<Long>?,
         sort: ProblemSort,
     ): CursorPage<ProblemResponse.Summary> {
         val problems =
@@ -64,7 +63,7 @@ class ProblemService(
 
         val authorMap = userRepository.findAllByIdIn(problems.map { it.authorId }).toList().associateBy { it.id }
         val userId = userIdOrNull()
-        val problemIds = problems.map { it.id }.toTypedArray()
+        val problemIds = problems.map { it.id!! }.toTypedArray()
         val solvedIds = userId?.let {
             submissionRepository.findSolvedProblemIdsByUserIdAndProblemIds(it, problemIds).toList().toSet()
         }
@@ -85,8 +84,9 @@ class ProblemService(
         }
     }
 
-    suspend fun getProblem(problemNumber: Int): ProblemResponse.Detail {
-        val problem = findByNumber(problemNumber)
+    suspend fun getProblem(problemId: Long): ProblemResponse.Detail {
+        val problem = problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NOT_FOUND)
         if (!problem.isPublic) {
             throw BusinessException(ProblemError.ACCESS_DENIED)
         }
@@ -98,12 +98,12 @@ class ProblemService(
         val author =
             userRepository.findById(problem.authorId)
                 ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
-        val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
-        val tags = getTagsByProblemId(problem.id)
+        val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id!!).toList()
+        val tags = getTagsByProblemId(problem.id!!)
         val status = userIdOrNull()?.let { userId ->
             when {
-                submissionRepository.existsByUserIdAndProblemIdAndResult(userId, problem.id, JudgeResult.ACCEPTED) -> SolveStatus.SOLVED
-                submissionRepository.existsByUserIdAndProblemId(userId, problem.id) -> SolveStatus.ATTEMPTED
+                submissionRepository.existsByUserIdAndProblemIdAndResult(userId, problem.id!!, JudgeResult.ACCEPTED) -> SolveStatus.SOLVED
+                submissionRepository.existsByUserIdAndProblemId(userId, problem.id!!) -> SolveStatus.ATTEMPTED
                 else -> null
             }
         }
@@ -118,14 +118,9 @@ class ProblemService(
 
     @Transactional
     suspend fun createProblem(request: CreateProblemRequest): ProblemResponse.Detail {
-        if (problemRepository.existsByNumber(request.number)) {
-            throw BusinessException(ProblemError.NUMBER_ALREADY_EXISTS)
-        }
-
         val problem =
             problemRepository.save(
                 Problem(
-                    number = request.number,
                     title = request.title,
                     description = request.description,
                     inputFormat = request.inputFormat,
@@ -143,14 +138,14 @@ class ProblemService(
                 ),
             )
 
-        saveExamples(problem.id, request.examples)
-        saveTags(problem.id, request.tagIds)
+        saveExamples(problem.id!!, request.examples)
+        saveTags(problem.id!!, request.tagIds)
 
         val author =
             userRepository.findById(problem.authorId)
                 ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
-        val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
-        val tags = getTagsByProblemId(problem.id)
+        val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id!!).toList()
+        val tags = getTagsByProblemId(problem.id!!)
 
         return problem.toDetail(
             author,
@@ -161,22 +156,16 @@ class ProblemService(
 
     @Transactional
     suspend fun updateProblem(
-        problemNumber: Int,
+        problemId: Long,
         request: UpdateProblemRequest,
     ): ProblemResponse.Detail {
-        val problem = findByNumber(problemNumber)
+        val problem = problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NOT_FOUND)
         validateOwner(problem)
-
-        if (request.number != null && request.number != problem.number) {
-            if (problemRepository.existsByNumber(request.number)) {
-                throw BusinessException(ProblemError.NUMBER_ALREADY_EXISTS)
-            }
-        }
 
         val updated =
             problemRepository.save(
                 problem.copy(
-                    number = request.number ?: problem.number,
                     title = request.title ?: problem.title,
                     description = request.description ?: problem.description,
                     inputFormat = request.inputFormat ?: problem.inputFormat,
@@ -194,20 +183,20 @@ class ProblemService(
             )
 
         request.examples?.let {
-            problemExampleRepository.deleteAllByProblemId(problem.id)
-            saveExamples(problem.id, it)
+            problemExampleRepository.deleteAllByProblemId(problem.id!!)
+            saveExamples(problem.id!!, it)
         }
 
         request.tagIds?.let {
-            problemTagRepository.deleteAllByProblemId(problem.id)
-            saveTags(problem.id, it)
+            problemTagRepository.deleteAllByProblemId(problem.id!!)
+            saveTags(problem.id!!, it)
         }
 
         val author =
             userRepository.findById(updated.authorId)
                 ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
-        val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(updated.id).toList()
-        val tags = getTagsByProblemId(updated.id)
+        val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(updated.id!!).toList()
+        val tags = getTagsByProblemId(updated.id!!)
 
         return updated.toDetail(
             author,
@@ -217,23 +206,21 @@ class ProblemService(
     }
 
     @Transactional
-    suspend fun deleteProblem(problemNumber: Int) {
-        val problem = findByNumber(problemNumber)
+    suspend fun deleteProblem(problemId: Long) {
+        val problem = problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NOT_FOUND)
         validateOwner(problem)
-        problemExampleRepository.deleteAllByProblemId(problem.id)
-        problemTagRepository.deleteAllByProblemId(problem.id)
+        problemExampleRepository.deleteAllByProblemId(problem.id!!)
+        problemTagRepository.deleteAllByProblemId(problem.id!!)
         problemRepository.delete(problem)
     }
-
-    private suspend fun findByNumber(problemNumber: Int): Problem =
-        problemRepository.findByNumber(problemNumber) ?: throw BusinessException(ProblemError.NOT_FOUND)
 
     private suspend fun validateOwner(problem: Problem) {
         if (problem.authorId != userId()) throw BusinessException(ProblemError.ACCESS_DENIED)
     }
 
     private suspend fun saveExamples(
-        problemId: UUID,
+        problemId: Long,
         examples: List<ExampleRequest>,
     ) {
         examples.forEachIndexed { index, example ->
@@ -244,17 +231,17 @@ class ProblemService(
     }
 
     private suspend fun saveTags(
-        problemId: UUID,
-        tagIds: List<UUID>,
+        problemId: Long,
+        tagIds: List<Long>,
     ) {
         tagIds.forEach { tagId -> problemTagRepository.insert(problemId, tagId) }
     }
 
-    private suspend fun getTagsByProblemId(problemId: UUID): List<ProblemResponse.Tag> {
+    private suspend fun getTagsByProblemId(problemId: Long): List<ProblemResponse.Tag> {
         val tagIds = problemTagRepository.findAllByProblemId(problemId).map { it.tagId }.toList()
         return tagRepository
             .findAllByIdIn(tagIds)
             .toList()
-            .map { ProblemResponse.Tag(it.id, it.name) }
+            .map { ProblemResponse.Tag(it.id!!, it.name) }
     }
 }

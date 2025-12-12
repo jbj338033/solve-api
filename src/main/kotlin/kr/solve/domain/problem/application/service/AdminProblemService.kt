@@ -24,7 +24,6 @@ import kr.solve.global.error.BusinessException
 import kr.solve.global.security.userId
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class AdminProblemService(
@@ -36,7 +35,7 @@ class AdminProblemService(
     private val userRepository: UserRepository,
 ) {
     suspend fun getProblems(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): CursorPage<AdminProblemResponse.Summary> {
         val problems = problemRepository.findAllByOrderByIdDesc(cursor, limit + 1).toList()
@@ -48,7 +47,7 @@ class AdminProblemService(
         }
     }
 
-    suspend fun getProblem(problemId: UUID): AdminProblemResponse.Detail {
+    suspend fun getProblem(problemId: Long): AdminProblemResponse.Detail {
         val problem =
             problemRepository.findById(problemId)
                 ?: throw BusinessException(ProblemError.NOT_FOUND)
@@ -56,14 +55,14 @@ class AdminProblemService(
         val author =
             userRepository.findById(problem.authorId)
                 ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
-        val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
-        val testcases = problemTestCaseRepository.findAllByProblemIdOrderByOrder(problem.id).toList()
-        val tags = getTagsByProblemId(problem.id)
+        val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id!!).toList()
+        val testcases = problemTestCaseRepository.findAllByProblemIdOrderByOrder(problem.id!!).toList()
+        val tags = getTagsByProblemId(problem.id!!)
 
         return problem.toAdminDetail(
             author,
             examples.map { AdminProblemResponse.Example(it.input, it.output, it.order) },
-            testcases.map { AdminProblemResponse.TestCase(it.id, it.input, it.output, it.order) },
+            testcases.map { AdminProblemResponse.TestCase(it.id!!, it.input, it.output, it.order) },
             tags,
         )
     }
@@ -73,7 +72,6 @@ class AdminProblemService(
         val problem =
             problemRepository.save(
                 Problem(
-                    number = request.number,
                     title = request.title,
                     description = request.description,
                     inputFormat = request.inputFormat,
@@ -91,14 +89,14 @@ class AdminProblemService(
                 ),
             )
 
-        saveExamples(problem.id, request.examples)
-        saveTestCases(problem.id, request.testcases)
-        saveTags(problem.id, request.tagIds)
+        saveExamples(problem.id!!, request.examples)
+        saveTestCases(problem.id!!, request.testcases)
+        saveTags(problem.id!!, request.tagIds)
     }
 
     @Transactional
     suspend fun updateProblem(
-        problemId: UUID,
+        problemId: Long,
         request: AdminUpdateProblemRequest,
     ) {
         val problem =
@@ -140,7 +138,7 @@ class AdminProblemService(
     }
 
     @Transactional
-    suspend fun deleteProblem(problemId: UUID) {
+    suspend fun deleteProblem(problemId: Long) {
         val problem =
             problemRepository.findById(problemId)
                 ?: throw BusinessException(ProblemError.NOT_FOUND)
@@ -152,7 +150,7 @@ class AdminProblemService(
     }
 
     private suspend fun saveExamples(
-        problemId: UUID,
+        problemId: Long,
         examples: List<AdminExampleRequest>,
     ) {
         examples.forEachIndexed { index, example ->
@@ -163,7 +161,7 @@ class AdminProblemService(
     }
 
     private suspend fun saveTestCases(
-        problemId: UUID,
+        problemId: Long,
         testcases: List<AdminTestCaseRequest>,
     ) {
         testcases.forEachIndexed { index, testcase ->
@@ -174,14 +172,14 @@ class AdminProblemService(
     }
 
     private suspend fun saveTags(
-        problemId: UUID,
-        tagIds: List<UUID>,
+        problemId: Long,
+        tagIds: List<Long>,
     ) {
         tagIds.forEach { tagId -> problemTagRepository.insert(problemId, tagId) }
     }
 
-    private suspend fun getTagsByProblemId(problemId: UUID): List<AdminProblemResponse.Tag> {
+    private suspend fun getTagsByProblemId(problemId: Long): List<AdminProblemResponse.Tag> {
         val tagIds = problemTagRepository.findAllByProblemId(problemId).map { it.tagId }.toList()
-        return tagRepository.findAllByIdIn(tagIds).toList().map { AdminProblemResponse.Tag(it.id, it.name) }
+        return tagRepository.findAllByIdIn(tagIds).toList().map { AdminProblemResponse.Tag(it.id!!, it.name) }
     }
 }

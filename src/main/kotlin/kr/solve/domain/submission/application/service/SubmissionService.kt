@@ -36,7 +36,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -57,21 +56,15 @@ class SubmissionService(
     private val judgeScope = CoroutineScope(Dispatchers.IO)
 
     suspend fun getSubmissions(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
         username: String? = null,
-        problemNumber: Int? = null,
+        problemId: Long? = null,
         language: Language? = null,
         result: JudgeResult? = null,
     ): CursorPage<SubmissionResponse.Summary> {
         val userId = username?.let {
-            userRepository.findByUsername(it)?.id
-                ?: throw BusinessException(SubmissionError.USER_NOT_FOUND)
-        }
-
-        val problemId = problemNumber?.let {
-            problemRepository.findByNumber(it)?.id
-                ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
+            userRepository.findByUsername(it)?.id!!
         }
 
         val submissions = submissionQueryRepository.findWithFilters(
@@ -88,14 +81,14 @@ class SubmissionService(
         val contestIds = submissions.mapNotNull { it.contestId }.distinct()
         val userIds = submissions.map { it.userId }.distinct()
 
-        val problemMap = problemRepository.findAllByIdIn(problemIds).toList().associateBy { it.id }
+        val problemMap = problemRepository.findAllByIdIn(problemIds).toList().associateBy { it.id!! }
         val contestMap =
             if (contestIds.isNotEmpty()) {
-                contestRepository.findAllByIdIn(contestIds).toList().associateBy { it.id }
+                contestRepository.findAllByIdIn(contestIds).toList().associateBy { it.id!! }
             } else {
                 emptyMap()
             }
-        val userMap = userRepository.findAllByIdIn(userIds).toList().associateBy { it.id }
+        val userMap = userRepository.findAllByIdIn(userIds).toList().associateBy { it.id!! }
 
         return CursorPage.of(submissions, limit) { submission ->
             val problem = problemMap[submission.problemId] ?: return@of null
@@ -108,7 +101,7 @@ class SubmissionService(
         }
     }
 
-    suspend fun getSubmission(submissionId: UUID): SubmissionResponse.Detail {
+    suspend fun getSubmission(submissionId: Long): SubmissionResponse.Detail {
         val submission = findById(submissionId)
         val problem =
             problemRepository.findById(submission.problemId)
@@ -123,7 +116,7 @@ class SubmissionService(
 
     @Transactional
     suspend fun createSubmission(
-        problemNumber: Int,
+        problemId: Long,
         request: CreateSubmissionRequest,
     ): SubmissionResponse.Summary {
         val currentUserId = userId()
@@ -132,7 +125,7 @@ class SubmissionService(
                 ?: throw BusinessException(SubmissionError.USER_NOT_FOUND)
 
         val problem =
-            problemRepository.findByNumber(problemNumber)
+            problemRepository.findById(problemId)
                 ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
 
         if (!problem.isPublic && problem.authorId != currentUserId) {
@@ -141,14 +134,14 @@ class SubmissionService(
 
         val testcases =
             problemTestCaseRepository
-                .findAllByProblemIdOrderByOrder(problem.id)
+                .findAllByProblemIdOrderByOrder(problem.id!!)
                 .toList()
-                .map { JudgeRequest.TestCase(id = it.id, input = it.input, output = it.output, order = it.order) }
+                .map { JudgeRequest.TestCase(id = it.id!!, input = it.input, output = it.output, order = it.order) }
 
         val submission =
             submissionRepository.save(
                 Submission(
-                    problemId = problem.id,
+                    problemId = problem.id!!,
                     userId = currentUserId,
                     language = request.language,
                     code = request.code,
@@ -166,8 +159,8 @@ class SubmissionService(
 
     @Transactional
     suspend fun createContestSubmission(
-        contestId: UUID,
-        problemNumber: Int,
+        contestId: Long,
+        problemId: Long,
         request: CreateSubmissionRequest,
     ): SubmissionResponse.Summary {
         val currentUserId = userId()
@@ -192,19 +185,19 @@ class SubmissionService(
         }
 
         val problem =
-            problemRepository.findByNumber(problemNumber)
+            problemRepository.findById(problemId)
                 ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
 
         val testcases =
             problemTestCaseRepository
-                .findAllByProblemIdOrderByOrder(problem.id)
+                .findAllByProblemIdOrderByOrder(problem.id!!)
                 .toList()
-                .map { JudgeRequest.TestCase(id = it.id, input = it.input, output = it.output, order = it.order) }
+                .map { JudgeRequest.TestCase(id = it.id!!, input = it.input, output = it.output, order = it.order) }
 
         val submission =
             submissionRepository.save(
                 Submission(
-                    problemId = problem.id,
+                    problemId = problem.id!!,
                     userId = currentUserId,
                     contestId = contestId,
                     language = request.language,
@@ -230,7 +223,7 @@ class SubmissionService(
         testcases: List<JudgeRequest.TestCase>,
     ) {
         try {
-            submissionRepository.updateStatus(submission.id, SubmissionStatus.JUDGING)
+            submissionRepository.updateStatus(submission.id!!, SubmissionStatus.JUDGING)
             submissionEventPublisher.publishUpdate(submission, problem, contest, user, SubmissionStatus.JUDGING)
 
             var finalResult: JudgeResult = JudgeResult.INTERNAL_ERROR
@@ -242,7 +235,7 @@ class SubmissionService(
             judgeService
                 .judge(
                     JudgeRequest(
-                        submissionId = submission.id,
+                        submissionId = submission.id!!,
                         language = request.language,
                         code = request.code,
                         timeLimit = problem.timeLimit,
@@ -254,7 +247,7 @@ class SubmissionService(
                         is JudgeEvent.Progress -> {
                             submissionResultRepository.save(
                                 SubmissionResult(
-                                    submissionId = submission.id,
+                                    submissionId = submission.id!!,
                                     testcaseId = event.testcaseId,
                                     result = event.result,
                                     timeUsed = event.time,
@@ -281,7 +274,7 @@ class SubmissionService(
                 }
 
             submissionRepository.updateResult(
-                submission.id,
+                submission.id!!,
                 SubmissionStatus.COMPLETED,
                 finalResult,
                 finalScore,
@@ -322,12 +315,12 @@ class SubmissionService(
                     userRepository.updateStreak(submission.userId, today, today.minusDays(1))
                 }
             } catch (e: Exception) {
-                log.warn(e) { "Failed to update user activity for submission ${submission.id}" }
+                log.warn(e) { "Failed to update user activity for submission ${submission.id!!}" }
             }
         } catch (e: Exception) {
-            log.error(e) { "Failed to judge submission ${submission.id}" }
+            log.error(e) { "Failed to judge submission ${submission.id!!}" }
             submissionRepository.updateResult(
-                submission.id,
+                submission.id!!,
                 SubmissionStatus.COMPLETED,
                 JudgeResult.INTERNAL_ERROR,
                 0,
@@ -349,7 +342,7 @@ class SubmissionService(
         }
     }
 
-    private suspend fun findById(submissionId: UUID): Submission =
+    private suspend fun findById(submissionId: Long): Submission =
         submissionRepository.findById(submissionId)
             ?: throw BusinessException(SubmissionError.NOT_FOUND)
 
@@ -358,10 +351,10 @@ class SubmissionService(
         contest: Contest?,
         user: User,
     ) = SubmissionResponse.Summary(
-        id = id,
-        problem = SubmissionResponse.Problem(problem.id, problem.title),
-        contest = contest?.let { SubmissionResponse.Contest(it.id, it.title) },
-        user = SubmissionResponse.User(user.id, user.username, user.displayName, user.profileImage),
+        id = id!!,
+        problem = SubmissionResponse.Problem(problem.id!!, problem.title),
+        contest = contest?.let { SubmissionResponse.Contest(it.id!!, it.title) },
+        user = SubmissionResponse.User(user.id!!, user.username, user.displayName, user.profileImage),
         language = language,
         status = status,
         result = result,
@@ -376,10 +369,10 @@ class SubmissionService(
         contest: Contest?,
         user: User,
     ) = SubmissionResponse.Detail(
-        id = id,
-        problem = SubmissionResponse.Problem(problem.id, problem.title),
-        contest = contest?.let { SubmissionResponse.Contest(it.id, it.title) },
-        user = SubmissionResponse.User(user.id, user.username, user.displayName, user.profileImage),
+        id = id!!,
+        problem = SubmissionResponse.Problem(problem.id!!, problem.title),
+        contest = contest?.let { SubmissionResponse.Contest(it.id!!, it.title) },
+        user = SubmissionResponse.User(user.id!!, user.username, user.displayName, user.profileImage),
         language = language,
         code = code,
         status = status,
