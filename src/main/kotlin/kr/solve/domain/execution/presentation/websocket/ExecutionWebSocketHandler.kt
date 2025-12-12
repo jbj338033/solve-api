@@ -105,7 +105,7 @@ class ExecutionWebSocketHandler(
         try {
             val (execId, events) =
                 executionService.startExecution(
-                    problemId = UUID.fromString(initData.problemId),
+                    problemId = initData.problemId.toLong(),
                     language = Language.valueOf(initData.language),
                     code = initData.code,
                 )
