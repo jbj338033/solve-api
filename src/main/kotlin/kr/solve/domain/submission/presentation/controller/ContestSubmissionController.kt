@@ -22,11 +22,11 @@ class ContestSubmissionController(
     private val submissionService: SubmissionService,
 ) {
     @Operation(summary = "코드 제출", security = [SecurityRequirement(name = "bearerAuth")])
-    @PostMapping("/{contestId}/problems/{problemId}/submissions")
+    @PostMapping("/{contestId}/problems/{problemNumber}/submissions")
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun createContestSubmission(
         @PathVariable contestId: UUID,
-        @PathVariable problemId: UUID,
+        @PathVariable problemNumber: Int,
         @RequestBody @Valid request: CreateSubmissionRequest,
-    ) = submissionService.createContestSubmission(contestId, problemId, request)
+    ) = submissionService.createContestSubmission(contestId, problemNumber, request)
 }

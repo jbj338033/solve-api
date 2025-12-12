@@ -60,13 +60,18 @@ class SubmissionService(
         cursor: UUID?,
         limit: Int,
         username: String? = null,
-        problemId: UUID? = null,
+        problemNumber: Int? = null,
         language: Language? = null,
         result: JudgeResult? = null,
     ): CursorPage<SubmissionResponse.Summary> {
         val userId = username?.let {
             userRepository.findByUsername(it)?.id
                 ?: throw BusinessException(SubmissionError.USER_NOT_FOUND)
+        }
+
+        val problemId = problemNumber?.let {
+            problemRepository.findByNumber(it)?.id
+                ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
         }
 
         val submissions = submissionQueryRepository.findWithFilters(
@@ -118,7 +123,7 @@ class SubmissionService(
 
     @Transactional
     suspend fun createSubmission(
-        problemId: UUID,
+        problemNumber: Int,
         request: CreateSubmissionRequest,
     ): SubmissionResponse.Summary {
         val currentUserId = userId()
@@ -127,7 +132,7 @@ class SubmissionService(
                 ?: throw BusinessException(SubmissionError.USER_NOT_FOUND)
 
         val problem =
-            problemRepository.findById(problemId)
+            problemRepository.findByNumber(problemNumber)
                 ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
 
         if (!problem.isPublic && problem.authorId != currentUserId) {
@@ -136,14 +141,14 @@ class SubmissionService(
 
         val testcases =
             problemTestCaseRepository
-                .findAllByProblemIdOrderByOrder(problemId)
+                .findAllByProblemIdOrderByOrder(problem.id)
                 .toList()
                 .map { JudgeRequest.TestCase(id = it.id, input = it.input, output = it.output, order = it.order) }
 
         val submission =
             submissionRepository.save(
                 Submission(
-                    problemId = problemId,
+                    problemId = problem.id,
                     userId = currentUserId,
                     language = request.language,
                     code = request.code,
@@ -162,7 +167,7 @@ class SubmissionService(
     @Transactional
     suspend fun createContestSubmission(
         contestId: UUID,
-        problemId: UUID,
+        problemNumber: Int,
         request: CreateSubmissionRequest,
     ): SubmissionResponse.Summary {
         val currentUserId = userId()
@@ -187,19 +192,19 @@ class SubmissionService(
         }
 
         val problem =
-            problemRepository.findById(problemId)
+            problemRepository.findByNumber(problemNumber)
                 ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
 
         val testcases =
             problemTestCaseRepository
-                .findAllByProblemIdOrderByOrder(problemId)
+                .findAllByProblemIdOrderByOrder(problem.id)
                 .toList()
                 .map { JudgeRequest.TestCase(id = it.id, input = it.input, output = it.output, order = it.order) }
 
         val submission =
             submissionRepository.save(
                 Submission(
-                    problemId = problemId,
+                    problemId = problem.id,
                     userId = currentUserId,
                     contestId = contestId,
                     language = request.language,

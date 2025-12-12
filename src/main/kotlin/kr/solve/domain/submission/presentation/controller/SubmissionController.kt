@@ -24,10 +24,10 @@ class SubmissionController(
         @RequestParam(required = false) cursor: UUID?,
         @RequestParam(defaultValue = "20") limit: Int,
         @RequestParam(required = false) username: String?,
-        @RequestParam(required = false) problemId: UUID?,
+        @RequestParam(required = false) problemNumber: Int?,
         @RequestParam(required = false) language: Language?,
         @RequestParam(required = false) result: JudgeResult?,
-    ) = submissionService.getSubmissions(cursor, limit.coerceIn(1, 100), username, problemId, language, result)
+    ) = submissionService.getSubmissions(cursor, limit.coerceIn(1, 100), username, problemNumber, language, result)
 
     @Operation(summary = "제출 상세 조회")
     @GetMapping("/{submissionId}")

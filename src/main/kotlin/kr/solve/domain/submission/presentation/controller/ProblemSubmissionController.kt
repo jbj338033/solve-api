@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @Tag(name = "Problem", description = "문제 API")
 @RestController
@@ -22,10 +21,10 @@ class ProblemSubmissionController(
     private val submissionService: SubmissionService,
 ) {
     @Operation(summary = "코드 제출", security = [SecurityRequirement(name = "bearerAuth")])
-    @PostMapping("/{problemId}/submissions")
+    @PostMapping("/{problemNumber}/submissions")
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun createSubmission(
-        @PathVariable problemId: UUID,
+        @PathVariable problemNumber: Int,
         @RequestBody @Valid request: CreateSubmissionRequest,
-    ) = submissionService.createSubmission(problemId, request)
+    ) = submissionService.createSubmission(problemNumber, request)
 }
