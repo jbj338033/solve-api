@@ -175,7 +175,7 @@ class ExecutionWebSocketHandler(
         val map = data as? Map<*, *> ?: return null
         return try {
             ExecutionMessage.InitData(
-                problemId = map["problemId"] as? String ?: return null,
+                problemId = map["problemId"]?.toString() ?: return null,
                 language = map["language"] as? String ?: return null,
                 code = map["code"] as? String ?: return null,
             )
