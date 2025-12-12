@@ -39,14 +39,12 @@ data class AdminCreateProblemRequest(
 )
 
 data class AdminExampleRequest(
-    @field:NotBlank
     val input: String,
     @field:NotBlank
     val output: String,
 )
 
 data class AdminTestCaseRequest(
-    @field:NotBlank
     val input: String,
     @field:NotBlank
     val output: String,
