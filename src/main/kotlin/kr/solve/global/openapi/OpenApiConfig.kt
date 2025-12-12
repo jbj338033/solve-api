@@ -55,7 +55,7 @@ class OpenApiConfig {
                         ws.send(JSON.stringify({
                           type: 'INIT',
                           data: {
-                            problemId: 'uuid-here',
+                            problemId: 1,
                             language: 'PYTHON',
                             code: 'name = input()\\nprint(f"Hello, {name}!")'
                           }
@@ -104,17 +104,17 @@ class OpenApiConfig {
                         {
                           "type": "NEW" | "UPDATE",
                           "data": {
-                            "id": "submission-uuid",
+                            "id": 1,
                             "problem": {
-                              "id": "problem-uuid",
+                              "id": 1,
                               "title": "A+B"
                             },
                             "contest": {
-                              "id": "contest-uuid",
+                              "id": 1,
                               "title": "2024 신입생 대회"
                             } | null,
                             "user": {
-                              "id": "user-uuid",
+                              "id": 1,
                               "username": "johndoe",
                               "displayName": "John Doe",
                               "profileImage": "https://..."
