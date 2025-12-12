@@ -53,7 +53,7 @@ class AdminWorkbookService(
         val problems =
             workbookProblems.mapNotNull { wp ->
                 problemMap[wp.problemId]?.let {
-                    AdminWorkbookResponse.Problem(it.id, it.title, it.difficulty, it.type)
+                    AdminWorkbookResponse.Problem(it.id, it.number, it.title, it.difficulty, it.type)
                 }
             }
 

@@ -50,6 +50,7 @@ fun Contest.toDetail(
                     order = cp.order,
                     score = cp.score,
                     id = problem.id,
+                    number = problem.number,
                     title = problem.title,
                     difficulty = problem.difficulty,
                 )
@@ -130,6 +131,8 @@ object ContestResponse {
             val score: Int?,
             @Schema(description = "문제 ID")
             val id: UUID,
+            @Schema(description = "문제 번호", example = "1000")
+            val number: Int,
             @Schema(description = "문제 제목", example = "A+B")
             val title: String,
             @Schema(description = "문제 난이도")
