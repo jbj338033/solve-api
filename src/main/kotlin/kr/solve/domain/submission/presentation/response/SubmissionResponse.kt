@@ -5,13 +5,12 @@ import kr.solve.domain.submission.domain.enums.JudgeResult
 import kr.solve.domain.submission.domain.enums.Language
 import kr.solve.domain.submission.domain.enums.SubmissionStatus
 import java.time.LocalDateTime
-import java.util.UUID
 
 object SubmissionResponse {
     @Schema(name = "Submission.Problem", description = "제출 관련 문제 정보")
     data class Problem(
         @Schema(description = "문제 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
     )
@@ -19,7 +18,7 @@ object SubmissionResponse {
     @Schema(name = "Submission.Contest", description = "제출 관련 대회 정보")
     data class Contest(
         @Schema(description = "대회 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "대회 제목", example = "2024 신입생 대회")
         val title: String,
     )
@@ -27,7 +26,7 @@ object SubmissionResponse {
     @Schema(name = "Submission.User", description = "제출자 정보")
     data class User(
         @Schema(description = "사용자 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "사용자명", example = "johndoe")
         val username: String,
         @Schema(description = "표시 이름", example = "John Doe")
@@ -39,7 +38,7 @@ object SubmissionResponse {
     @Schema(name = "Submission.Summary", description = "제출 요약 정보")
     data class Summary(
         @Schema(description = "제출 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "문제 정보")
         val problem: Problem,
         @Schema(description = "대회 정보 (대회 제출인 경우)")
@@ -65,7 +64,7 @@ object SubmissionResponse {
     @Schema(name = "Submission.Detail", description = "제출 상세 정보")
     data class Detail(
         @Schema(description = "제출 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "문제 정보")
         val problem: Problem,
         @Schema(description = "대회 정보 (대회 제출인 경우)")

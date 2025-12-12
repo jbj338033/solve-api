@@ -6,14 +6,13 @@ import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.user.domain.entity.User
 import java.time.LocalDateTime
-import java.util.UUID
 
 fun Problem.toAdminSummary(author: User) =
     AdminProblemResponse.Summary(
-        id = id,
+        id = id!!,
         title = title,
         difficulty = difficulty,
-        author = AdminProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
+        author = AdminProblemResponse.Author(author.id!!, author.username, author.displayName, author.profileImage),
         isPublic = isPublic,
         type = type,
         createdAt = createdAt,
@@ -26,10 +25,10 @@ fun Problem.toAdminDetail(
     testcases: List<AdminProblemResponse.TestCase>,
     tags: List<AdminProblemResponse.Tag>,
 ) = AdminProblemResponse.Detail(
-    id = id,
+    id = id!!,
     title = title,
     difficulty = difficulty,
-    author = AdminProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
+    author = AdminProblemResponse.Author(author.id!!, author.username, author.displayName, author.profileImage),
     isPublic = isPublic,
     type = type,
     description = description,
@@ -52,7 +51,7 @@ object AdminProblemResponse {
     @Schema(name = "Admin.Problem.Author", description = "문제 작성자 정보")
     data class Author(
         @Schema(description = "작성자 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "작성자 사용자명", example = "johndoe")
         val username: String,
         @Schema(description = "작성자 표시 이름", example = "John Doe")
@@ -74,7 +73,7 @@ object AdminProblemResponse {
     @Schema(name = "Admin.Problem.Tag", description = "문제 태그")
     data class Tag(
         @Schema(description = "태그 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "태그 이름", example = "DP")
         val name: String,
     )
@@ -82,7 +81,7 @@ object AdminProblemResponse {
     @Schema(name = "Admin.Problem.TestCase", description = "문제 테스트케이스")
     data class TestCase(
         @Schema(description = "테스트케이스 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "입력")
         val input: String,
         @Schema(description = "출력")
@@ -94,7 +93,7 @@ object AdminProblemResponse {
     @Schema(name = "Admin.Problem.Summary", description = "문제 요약 정보")
     data class Summary(
         @Schema(description = "문제 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
         @Schema(description = "문제 난이도")
@@ -114,7 +113,7 @@ object AdminProblemResponse {
     @Schema(name = "Admin.Problem.Detail", description = "문제 상세 정보")
     data class Detail(
         @Schema(description = "문제 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
         @Schema(description = "문제 난이도")

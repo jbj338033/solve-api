@@ -7,17 +7,15 @@ import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.problem.domain.enums.SolveStatus
 import kr.solve.domain.user.domain.entity.User
 import java.time.LocalDateTime
-import java.util.UUID
 
 fun Problem.toSummary(
     author: User,
     status: SolveStatus? = null,
 ) = ProblemResponse.Summary(
-    id = id,
-    number = number,
+    id = id!!,
     title = title,
     difficulty = difficulty,
-    author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
+    author = ProblemResponse.Author(author.id!!, author.username, author.displayName, author.profileImage),
     isPublic = isPublic,
     type = type,
     status = status,
@@ -30,11 +28,10 @@ fun Problem.toDetail(
     tags: List<ProblemResponse.Tag>,
     status: SolveStatus? = null,
 ) = ProblemResponse.Detail(
-    id = id,
-    number = number,
+    id = id!!,
     title = title,
     difficulty = difficulty,
-    author = ProblemResponse.Author(author.id, author.username, author.displayName, author.profileImage),
+    author = ProblemResponse.Author(author.id!!, author.username, author.displayName, author.profileImage),
     isPublic = isPublic,
     type = type,
     status = status,
@@ -57,7 +54,7 @@ object ProblemResponse {
     @Schema(name = "Problem.Author", description = "문제 작성자 정보")
     data class Author(
         @Schema(description = "작성자 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "작성자 사용자명", example = "johndoe")
         val username: String,
         @Schema(description = "작성자 표시 이름", example = "John Doe")
@@ -79,7 +76,7 @@ object ProblemResponse {
     @Schema(name = "Problem.Tag", description = "문제 태그")
     data class Tag(
         @Schema(description = "태그 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "태그 이름", example = "DP")
         val name: String,
     )
@@ -87,9 +84,7 @@ object ProblemResponse {
     @Schema(name = "Problem.Summary", description = "문제 요약 정보")
     data class Summary(
         @Schema(description = "문제 ID")
-        val id: UUID,
-        @Schema(description = "문제 번호", example = "1000")
-        val number: Int,
+        val id: Long,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
         @Schema(description = "문제 난이도")
@@ -109,9 +104,7 @@ object ProblemResponse {
     @Schema(name = "Problem.Detail", description = "문제 상세 정보")
     data class Detail(
         @Schema(description = "문제 ID")
-        val id: UUID,
-        @Schema(description = "문제 번호", example = "1000")
-        val number: Int,
+        val id: Long,
         @Schema(description = "문제 제목", example = "A+B")
         val title: String,
         @Schema(description = "문제 난이도")

@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
-import java.util.UUID
 
 data class AdminUpdateProblemRequest(
     @field:Size(max = 200)
@@ -31,5 +30,5 @@ data class AdminUpdateProblemRequest(
     val examples: List<AdminExampleRequest>? = null,
     @field:Valid
     val testcases: List<AdminTestCaseRequest>? = null,
-    val tagIds: List<UUID>? = null,
+    val tagIds: List<Long>? = null,
 )

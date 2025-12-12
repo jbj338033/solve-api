@@ -15,7 +15,6 @@ import kr.solve.domain.user.domain.enums.UserOAuthProvider
 import kr.solve.domain.user.domain.enums.UserRole
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 
 fun User.toMe(providers: List<UserOAuthProvider>) =
     UserResponse.Me(
@@ -110,7 +109,7 @@ object UserResponse {
     @Schema(name = "User.Me", description = "내 정보")
     data class Me(
         @Schema(description = "사용자 ID")
-        val id: UUID,
+        val id: Long?,
         @Schema(description = "사용자명", example = "johndoe")
         val username: String,
         @Schema(description = "표시 이름", example = "John Doe")
@@ -138,7 +137,7 @@ object UserResponse {
     @Schema(name = "User.Profile", description = "사용자 프로필")
     data class Profile(
         @Schema(description = "사용자 ID")
-        val id: UUID,
+        val id: Long?,
         @Schema(description = "사용자명", example = "johndoe")
         val username: String,
         @Schema(description = "표시 이름", example = "John Doe")
@@ -179,7 +178,7 @@ object UserResponse {
         @Schema(name = "User.Profile.Banner", description = "프로필 배너")
         data class Banner(
             @Schema(description = "배너 ID")
-            val id: UUID,
+            val id: Long?,
             @Schema(description = "배너 이름")
             val name: String,
             @Schema(description = "배너 이미지 URL")
@@ -192,7 +191,7 @@ object UserResponse {
         @Schema(description = "순위", example = "1")
         val rank: Int,
         @Schema(description = "사용자 ID")
-        val id: UUID,
+        val id: Long?,
         @Schema(description = "사용자명", example = "johndoe")
         val username: String,
         @Schema(description = "표시 이름", example = "John Doe")
@@ -244,7 +243,7 @@ object UserResponse {
         @Schema(description = "레이팅 타입")
         val ratingType: RatingType,
         @Schema(description = "대회 ID (대회 레이팅인 경우)")
-        val contestId: UUID?,
+        val contestId: Long?,
         @Schema(description = "기록 일시")
         val recordedAt: LocalDateTime,
     )

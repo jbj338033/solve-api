@@ -8,7 +8,6 @@ import kr.solve.domain.contest.domain.enums.ContestType
 import kr.solve.domain.contest.domain.enums.ScoreboardType
 import kr.solve.domain.contest.domain.enums.ScoringType
 import java.time.LocalDateTime
-import java.util.UUID
 
 data class AdminCreateContestRequest(
     @field:NotBlank
@@ -28,7 +27,7 @@ data class AdminCreateContestRequest(
 )
 
 data class AdminContestProblemRequest(
-    val problemId: UUID,
+    val problemId: Long,
     @field:Positive
     val score: Int? = null,
 )

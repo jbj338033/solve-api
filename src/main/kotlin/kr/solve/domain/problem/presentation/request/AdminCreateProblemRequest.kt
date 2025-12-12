@@ -7,11 +7,8 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
-import java.util.UUID
 
 data class AdminCreateProblemRequest(
-    @field:Min(1)
-    val number: Int,
     @field:NotBlank
     @field:Size(max = 200)
     val title: String,
@@ -38,7 +35,7 @@ data class AdminCreateProblemRequest(
     val examples: List<AdminExampleRequest> = emptyList(),
     @field:Valid
     val testcases: List<AdminTestCaseRequest> = emptyList(),
-    val tagIds: List<UUID> = emptyList(),
+    val tagIds: List<Long> = emptyList(),
 )
 
 data class AdminExampleRequest(

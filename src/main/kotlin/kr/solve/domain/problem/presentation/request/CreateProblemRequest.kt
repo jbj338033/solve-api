@@ -7,11 +7,8 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemType
-import java.util.UUID
 
 data class CreateProblemRequest(
-    @field:Min(1)
-    val number: Int,
     @field:NotBlank
     @field:Size(max = 200)
     val title: String,
@@ -36,7 +33,7 @@ data class CreateProblemRequest(
     val interactorLanguage: String? = null,
     @field:Valid
     val examples: List<ExampleRequest> = emptyList(),
-    val tagIds: List<UUID> = emptyList(),
+    val tagIds: List<Long> = emptyList(),
 )
 
 data class ExampleRequest(

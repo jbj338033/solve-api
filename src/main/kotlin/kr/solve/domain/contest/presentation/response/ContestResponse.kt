@@ -9,11 +9,10 @@ import kr.solve.domain.contest.domain.enums.ScoringType
 import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import java.time.LocalDateTime
-import java.util.UUID
 
 fun Contest.toSummary() =
     ContestResponse.Summary(
-        id = id,
+        id = id!!,
         title = title,
         description = description,
         hostId = hostId,
@@ -28,10 +27,10 @@ fun Contest.toSummary() =
 
 fun Contest.toDetail(
     contestProblems: List<ContestProblem>,
-    problemMap: Map<UUID, Problem>,
+    problemMap: Map<Long, Problem>,
     isParticipating: Boolean,
 ) = ContestResponse.Detail(
-    id = id,
+    id = id!!,
     title = title,
     description = description,
     hostId = hostId,
@@ -49,8 +48,7 @@ fun Contest.toDetail(
                 ContestResponse.Detail.Problem(
                     order = cp.order,
                     score = cp.score,
-                    id = problem.id,
-                    number = problem.number,
+                    id = problem.id!!,
                     title = problem.title,
                     difficulty = problem.difficulty,
                 )
@@ -65,13 +63,13 @@ object ContestResponse {
     @Schema(name = "Contest.Summary", description = "대회 요약 정보")
     data class Summary(
         @Schema(description = "대회 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "대회 제목", example = "2024 신입생 프로그래밍 대회")
         val title: String,
         @Schema(description = "대회 설명")
         val description: String?,
         @Schema(description = "주최자 ID")
-        val hostId: UUID,
+        val hostId: Long,
         @Schema(description = "대회 시작 시간")
         val startAt: LocalDateTime,
         @Schema(description = "대회 종료 시간")
@@ -91,13 +89,13 @@ object ContestResponse {
     @Schema(name = "Contest.Detail", description = "대회 상세 정보")
     data class Detail(
         @Schema(description = "대회 ID")
-        val id: UUID,
+        val id: Long,
         @Schema(description = "대회 제목", example = "2024 신입생 프로그래밍 대회")
         val title: String,
         @Schema(description = "대회 설명")
         val description: String?,
         @Schema(description = "주최자 ID")
-        val hostId: UUID,
+        val hostId: Long,
         @Schema(description = "대회 시작 시간")
         val startAt: LocalDateTime,
         @Schema(description = "대회 종료 시간")
@@ -130,9 +128,7 @@ object ContestResponse {
             @Schema(description = "문제 배점 (IOI 방식)", example = "100")
             val score: Int?,
             @Schema(description = "문제 ID")
-            val id: UUID,
-            @Schema(description = "문제 번호", example = "1000")
-            val number: Int,
+            val id: Long,
             @Schema(description = "문제 제목", example = "A+B")
             val title: String,
             @Schema(description = "문제 난이도")

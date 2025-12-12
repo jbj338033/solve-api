@@ -2,7 +2,6 @@ package kr.solve.domain.tag.presentation.response
 
 import io.swagger.v3.oas.annotations.media.Schema
 import kr.solve.domain.tag.domain.entity.Tag
-import java.util.UUID
 
 fun Tag.toResponse() =
     TagResponse(
@@ -13,7 +12,7 @@ fun Tag.toResponse() =
 @Schema(name = "Tag", description = "태그 정보")
 data class TagResponse(
     @Schema(description = "태그 ID")
-    val id: UUID,
+    val id: Long?,
     @Schema(description = "태그 이름", example = "DP")
     val name: String,
 )
