@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @Tag(name = "Workbook", description = "워크북 API")
 @RestController
@@ -29,14 +28,14 @@ class WorkbookController(
     @Operation(summary = "워크북 목록 조회")
     @GetMapping
     suspend fun getWorkbooks(
-        @RequestParam(required = false) cursor: UUID?,
+        @RequestParam(required = false) cursor: Long?,
         @RequestParam(defaultValue = "20") limit: Int,
     ) = workbookService.getWorkbooks(cursor, limit.coerceIn(1, 100))
 
     @Operation(summary = "워크북 상세 조회")
     @GetMapping("/{workbookId}")
     suspend fun getWorkbook(
-        @PathVariable workbookId: UUID,
+        @PathVariable workbookId: Long,
     ) = workbookService.getWorkbook(workbookId)
 
     @Operation(summary = "워크북 생성", security = [SecurityRequirement(name = "bearerAuth")])
@@ -50,7 +49,7 @@ class WorkbookController(
     @PatchMapping("/{workbookId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateWorkbook(
-        @PathVariable workbookId: UUID,
+        @PathVariable workbookId: Long,
         @Valid @RequestBody request: UpdateWorkbookRequest,
     ) = workbookService.updateWorkbook(workbookId, request)
 
@@ -58,6 +57,6 @@ class WorkbookController(
     @DeleteMapping("/{workbookId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteWorkbook(
-        @PathVariable workbookId: UUID,
+        @PathVariable workbookId: Long,
     ) = workbookService.deleteWorkbook(workbookId)
 }

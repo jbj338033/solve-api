@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @Tag(name = "Contest", description = "대회 API")
 @RestController
@@ -30,14 +29,14 @@ class ContestController(
     @Operation(summary = "대회 목록 조회")
     @GetMapping
     suspend fun getContests(
-        @RequestParam(required = false) cursor: UUID?,
+        @RequestParam(required = false) cursor: Long?,
         @RequestParam(defaultValue = "20") limit: Int,
     ) = contestService.getContests(cursor, limit.coerceIn(1, 100))
 
     @Operation(summary = "대회 상세 조회")
     @GetMapping("/{contestId}")
     suspend fun getContest(
-        @PathVariable contestId: UUID,
+        @PathVariable contestId: Long,
     ) = contestService.getContest(contestId)
 
     @Operation(summary = "대회 생성", security = [SecurityRequirement(name = "bearerAuth")])
@@ -51,7 +50,7 @@ class ContestController(
     @PatchMapping("/{contestId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateContest(
-        @PathVariable contestId: UUID,
+        @PathVariable contestId: Long,
         @Valid @RequestBody request: UpdateContestRequest,
     ) = contestService.updateContest(contestId, request)
 
@@ -59,14 +58,14 @@ class ContestController(
     @DeleteMapping("/{contestId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteContest(
-        @PathVariable contestId: UUID,
+        @PathVariable contestId: Long,
     ) = contestService.deleteContest(contestId)
 
     @Operation(summary = "대회 참가", security = [SecurityRequirement(name = "bearerAuth")])
     @PostMapping("/{contestId}/join")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun joinContest(
-        @PathVariable contestId: UUID,
+        @PathVariable contestId: Long,
         @RequestBody request: JoinContestRequest,
     ) = contestService.joinContest(contestId, request)
 
@@ -74,6 +73,6 @@ class ContestController(
     @PostMapping("/{contestId}/leave")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun leaveContest(
-        @PathVariable contestId: UUID,
+        @PathVariable contestId: Long,
     ) = contestService.leaveContest(contestId)
 }

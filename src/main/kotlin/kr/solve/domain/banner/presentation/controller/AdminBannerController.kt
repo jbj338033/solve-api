@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @Tag(name = "Admin - Banner", description = "배너 관리 API")
 @SecurityRequirement(name = "bearerAuth")
@@ -35,7 +34,7 @@ class AdminBannerController(
     @Operation(summary = "배너 상세 조회")
     @GetMapping("/{bannerId}")
     suspend fun getBanner(
-        @PathVariable bannerId: UUID,
+        @PathVariable bannerId: Long,
     ) = adminBannerService.getBanner(bannerId)
 
     @Operation(summary = "배너 생성")
@@ -49,7 +48,7 @@ class AdminBannerController(
     @PatchMapping("/{bannerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateBanner(
-        @PathVariable bannerId: UUID,
+        @PathVariable bannerId: Long,
         @Valid @RequestBody request: AdminUpdateBannerRequest,
     ) = adminBannerService.updateBanner(bannerId, request)
 
@@ -57,6 +56,6 @@ class AdminBannerController(
     @DeleteMapping("/{bannerId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteBanner(
-        @PathVariable bannerId: UUID,
+        @PathVariable bannerId: Long,
     ) = adminBannerService.deleteBanner(bannerId)
 }

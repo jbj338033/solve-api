@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @Tag(name = "Contest", description = "대회 API")
 @RestController
@@ -22,11 +21,11 @@ class ContestSubmissionController(
     private val submissionService: SubmissionService,
 ) {
     @Operation(summary = "코드 제출", security = [SecurityRequirement(name = "bearerAuth")])
-    @PostMapping("/{contestId}/problems/{problemNumber}/submissions")
+    @PostMapping("/{contestId}/problems/{problemId}/submissions")
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun createContestSubmission(
-        @PathVariable contestId: UUID,
-        @PathVariable problemNumber: Int,
+        @PathVariable contestId: Long,
+        @PathVariable problemId: Long,
         @RequestBody @Valid request: CreateSubmissionRequest,
-    ) = submissionService.createContestSubmission(contestId, problemNumber, request)
+    ) = submissionService.createContestSubmission(contestId, problemId, request)
 }

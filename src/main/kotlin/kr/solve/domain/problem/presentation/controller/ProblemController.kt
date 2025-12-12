@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @Tag(name = "Problem", description = "문제 API")
 @RestController
@@ -32,12 +31,12 @@ class ProblemController(
     @Operation(summary = "문제 목록 조회")
     @GetMapping
     suspend fun getProblems(
-        @RequestParam(required = false) cursor: UUID?,
+        @RequestParam(required = false) cursor: Long?,
         @RequestParam(defaultValue = "20") limit: Int,
         @RequestParam(required = false) difficulties: List<ProblemDifficulty>?,
         @RequestParam(required = false) type: ProblemType?,
         @RequestParam(required = false) query: String?,
-        @RequestParam(required = false) tagIds: List<UUID>?,
+        @RequestParam(required = false) tagIds: List<Long>?,
         @RequestParam(defaultValue = "LATEST") sort: ProblemSort,
     ) = problemService.getProblems(
         cursor = cursor,
@@ -50,10 +49,10 @@ class ProblemController(
     )
 
     @Operation(summary = "문제 상세 조회")
-    @GetMapping("/{problemNumber}")
+    @GetMapping("/{problemId}")
     suspend fun getProblem(
-        @PathVariable problemNumber: Int,
-    ) = problemService.getProblem(problemNumber)
+        @PathVariable problemId: Long,
+    ) = problemService.getProblem(problemId)
 
     @Operation(summary = "문제 생성", security = [SecurityRequirement(name = "bearerAuth")])
     @PostMapping
@@ -63,16 +62,16 @@ class ProblemController(
     ) = problemService.createProblem(request)
 
     @Operation(summary = "문제 수정", security = [SecurityRequirement(name = "bearerAuth")])
-    @PatchMapping("/{problemNumber}")
+    @PatchMapping("/{problemId}")
     suspend fun updateProblem(
-        @PathVariable problemNumber: Int,
+        @PathVariable problemId: Long,
         @Valid @RequestBody request: UpdateProblemRequest,
-    ) = problemService.updateProblem(problemNumber, request)
+    ) = problemService.updateProblem(problemId, request)
 
     @Operation(summary = "문제 삭제", security = [SecurityRequirement(name = "bearerAuth")])
-    @DeleteMapping("/{problemNumber}")
+    @DeleteMapping("/{problemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteProblem(
-        @PathVariable problemNumber: Int,
-    ) = problemService.deleteProblem(problemNumber)
+        @PathVariable problemId: Long,
+    ) = problemService.deleteProblem(problemId)
 }

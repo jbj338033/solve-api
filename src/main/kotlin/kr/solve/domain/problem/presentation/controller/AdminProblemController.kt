@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @Tag(name = "Admin - Problem", description = "문제 관리 API")
 @SecurityRequirement(name = "bearerAuth")
@@ -32,14 +31,14 @@ class AdminProblemController(
     @Operation(summary = "문제 목록 조회")
     @GetMapping
     suspend fun getProblems(
-        @RequestParam(required = false) cursor: UUID?,
+        @RequestParam(required = false) cursor: Long?,
         @RequestParam(defaultValue = "20") limit: Int,
     ) = adminProblemService.getProblems(cursor, limit.coerceIn(1, 100))
 
     @Operation(summary = "문제 상세 조회")
     @GetMapping("/{problemId}")
     suspend fun getProblem(
-        @PathVariable problemId: UUID,
+        @PathVariable problemId: Long,
     ) = adminProblemService.getProblem(problemId)
 
     @Operation(summary = "문제 생성")
@@ -53,7 +52,7 @@ class AdminProblemController(
     @PatchMapping("/{problemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateProblem(
-        @PathVariable problemId: UUID,
+        @PathVariable problemId: Long,
         @Valid @RequestBody request: AdminUpdateProblemRequest,
     ) = adminProblemService.updateProblem(problemId, request)
 
@@ -61,6 +60,6 @@ class AdminProblemController(
     @DeleteMapping("/{problemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteProblem(
-        @PathVariable problemId: UUID,
+        @PathVariable problemId: Long,
     ) = adminProblemService.deleteProblem(problemId)
 }

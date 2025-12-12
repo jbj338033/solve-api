@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
 
 @Tag(name = "Admin - Tag", description = "태그 관리 API")
 @SecurityRequirement(name = "bearerAuth")
@@ -43,7 +42,7 @@ class AdminTagController(
     @PatchMapping("/{tagId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateTag(
-        @PathVariable tagId: UUID,
+        @PathVariable tagId: Long,
         @Valid @RequestBody request: AdminUpdateTagRequest,
     ) = adminTagService.updateTag(tagId, request.name)
 
@@ -51,6 +50,6 @@ class AdminTagController(
     @DeleteMapping("/{tagId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun deleteTag(
-        @PathVariable tagId: UUID,
+        @PathVariable tagId: Long,
     ) = adminTagService.deleteTag(tagId)
 }

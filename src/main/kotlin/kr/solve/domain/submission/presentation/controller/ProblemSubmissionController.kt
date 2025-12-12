@@ -21,10 +21,10 @@ class ProblemSubmissionController(
     private val submissionService: SubmissionService,
 ) {
     @Operation(summary = "코드 제출", security = [SecurityRequirement(name = "bearerAuth")])
-    @PostMapping("/{problemNumber}/submissions")
+    @PostMapping("/{problemId}/submissions")
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun createSubmission(
-        @PathVariable problemNumber: Int,
+        @PathVariable problemId: Long,
         @RequestBody @Valid request: CreateSubmissionRequest,
-    ) = submissionService.createSubmission(problemNumber, request)
+    ) = submissionService.createSubmission(problemId, request)
 }
