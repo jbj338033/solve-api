@@ -3,17 +3,16 @@ package kr.solve.domain.contest.domain.repository
 import kotlinx.coroutines.flow.Flow
 import kr.solve.domain.contest.domain.entity.ContestResult
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
-import java.util.UUID
 
-interface ContestResultRepository : CoroutineCrudRepository<ContestResult, UUID> {
+interface ContestResultRepository : CoroutineCrudRepository<ContestResult, Long> {
     fun findAllByContestIdAndUserId(
-        contestId: UUID,
-        userId: UUID,
+        contestId: Long,
+        userId: Long,
     ): Flow<ContestResult>
 
     suspend fun findByContestIdAndUserIdAndProblemId(
-        contestId: UUID,
-        userId: UUID,
-        problemId: UUID,
+        contestId: Long,
+        userId: Long,
+        problemId: Long,
     ): ContestResult?
 }

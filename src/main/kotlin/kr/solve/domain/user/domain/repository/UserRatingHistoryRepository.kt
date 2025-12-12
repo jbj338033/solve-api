@@ -4,13 +4,12 @@ import kotlinx.coroutines.flow.Flow
 import kr.solve.domain.user.domain.entity.UserRatingHistory
 import kr.solve.domain.user.domain.enums.RatingType
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
-import java.util.UUID
 
-interface UserRatingHistoryRepository : CoroutineCrudRepository<UserRatingHistory, UUID> {
-    fun findAllByUserIdOrderByRecordedAtDesc(userId: UUID): Flow<UserRatingHistory>
+interface UserRatingHistoryRepository : CoroutineCrudRepository<UserRatingHistory, Long> {
+    fun findAllByUserIdOrderByRecordedAtDesc(userId: Long): Flow<UserRatingHistory>
 
     fun findAllByUserIdAndRatingTypeOrderByRecordedAtDesc(
-        userId: UUID,
+        userId: Long,
         ratingType: RatingType,
     ): Flow<UserRatingHistory>
 }

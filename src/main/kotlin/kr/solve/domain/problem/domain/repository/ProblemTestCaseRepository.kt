@@ -3,14 +3,13 @@ package kr.solve.domain.problem.domain.repository
 import kotlinx.coroutines.flow.Flow
 import kr.solve.domain.problem.domain.entity.ProblemTestCase
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
-import java.util.UUID
 
-interface ProblemTestCaseRepository : CoroutineCrudRepository<ProblemTestCase, UUID> {
-    fun findAllByProblemIdOrderByOrder(problemId: UUID): Flow<ProblemTestCase>
+interface ProblemTestCaseRepository : CoroutineCrudRepository<ProblemTestCase, Long> {
+    fun findAllByProblemIdOrderByOrder(problemId: Long): Flow<ProblemTestCase>
 
-    fun findAllBySubtaskId(subtaskId: UUID): Flow<ProblemTestCase>
+    fun findAllBySubtaskId(subtaskId: Long): Flow<ProblemTestCase>
 
-    suspend fun countByProblemId(problemId: UUID): Int
+    suspend fun countByProblemId(problemId: Long): Int
 
-    suspend fun deleteAllByProblemId(problemId: UUID)
+    suspend fun deleteAllByProblemId(problemId: Long)
 }

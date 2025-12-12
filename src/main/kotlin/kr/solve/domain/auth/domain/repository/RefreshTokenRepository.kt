@@ -6,7 +6,6 @@ import kr.solve.global.security.jwt.JwtProperties
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.stereotype.Repository
 import java.time.Duration
-import java.util.UUID
 
 @Repository
 class RefreshTokenRepository(
@@ -15,7 +14,7 @@ class RefreshTokenRepository(
 ) {
     suspend fun save(
         token: String,
-        userId: UUID,
+        userId: Long,
     ) {
         val key = KEY_PREFIX + token
         val ttl = Duration.ofMillis(jwtProperties.refreshTokenExpiration)
@@ -26,14 +25,14 @@ class RefreshTokenRepository(
             .awaitSingle()
     }
 
-    suspend fun findUserIdByToken(token: String): UUID? {
+    suspend fun findUserIdByToken(token: String): Long? {
         val key = KEY_PREFIX + token
 
         return redisTemplate
             .opsForValue()
             .get(key)
             .awaitSingleOrNull()
-            ?.let { UUID.fromString(it) }
+            ?.toLongOrNull()
     }
 
     suspend fun deleteByToken(token: String) {

@@ -4,9 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import kr.solve.domain.contest.domain.entity.Contest
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
-import java.util.UUID
 
-interface ContestRepository : CoroutineCrudRepository<Contest, UUID> {
+interface ContestRepository : CoroutineCrudRepository<Contest, Long> {
     @Query(
         """
         SELECT * FROM contests
@@ -16,13 +15,13 @@ interface ContestRepository : CoroutineCrudRepository<Contest, UUID> {
         """,
     )
     fun findAllByOrderByIdDesc(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): Flow<Contest>
 
-    fun findAllByHostId(hostId: UUID): Flow<Contest>
+    fun findAllByHostId(hostId: Long): Flow<Contest>
 
-    fun findAllByIdIn(ids: List<UUID>): Flow<Contest>
+    fun findAllByIdIn(ids: List<Long>): Flow<Contest>
 
     suspend fun findByInviteCode(inviteCode: String): Contest?
 }

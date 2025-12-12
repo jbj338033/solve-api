@@ -4,9 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import kr.solve.domain.workbook.domain.entity.Workbook
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
-import java.util.UUID
 
-interface WorkbookRepository : CoroutineCrudRepository<Workbook, UUID> {
+interface WorkbookRepository : CoroutineCrudRepository<Workbook, Long> {
     @Query(
         """
         SELECT * FROM workbooks
@@ -16,9 +15,9 @@ interface WorkbookRepository : CoroutineCrudRepository<Workbook, UUID> {
         """,
     )
     fun findAllByOrderByIdDesc(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): Flow<Workbook>
 
-    fun findAllByAuthorId(authorId: UUID): Flow<Workbook>
+    fun findAllByAuthorId(authorId: Long): Flow<Workbook>
 }

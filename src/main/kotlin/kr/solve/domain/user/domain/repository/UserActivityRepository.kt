@@ -6,16 +6,15 @@ import org.springframework.data.r2dbc.repository.Modifying
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import java.time.LocalDate
-import java.util.UUID
 
-interface UserActivityRepository : CoroutineCrudRepository<UserActivity, UUID> {
+interface UserActivityRepository : CoroutineCrudRepository<UserActivity, Long> {
     suspend fun findByUserIdAndDate(
-        userId: UUID,
+        userId: Long,
         date: LocalDate,
     ): UserActivity?
 
     fun findAllByUserIdAndDateBetween(
-        userId: UUID,
+        userId: Long,
         startDate: LocalDate,
         endDate: LocalDate,
     ): Flow<UserActivity>
@@ -23,8 +22,8 @@ interface UserActivityRepository : CoroutineCrudRepository<UserActivity, UUID> {
     @Modifying
     @Query(
         """
-        INSERT INTO user_activities (id, version, created_at, updated_at, user_id, date, solved_count, submission_count)
-        VALUES (gen_random_uuid(), 0, NOW(), NOW(), :userId, :date, :solvedCount, :submissionCount)
+        INSERT INTO user_activities (version, created_at, updated_at, user_id, date, solved_count, submission_count)
+        VALUES (0, NOW(), NOW(), :userId, :date, :solvedCount, :submissionCount)
         ON CONFLICT (user_id, date) DO UPDATE SET
             solved_count = user_activities.solved_count + :solvedCount,
             submission_count = user_activities.submission_count + :submissionCount,
@@ -32,7 +31,7 @@ interface UserActivityRepository : CoroutineCrudRepository<UserActivity, UUID> {
         """,
     )
     suspend fun upsertActivity(
-        userId: UUID,
+        userId: Long,
         date: LocalDate,
         solvedCount: Int,
         submissionCount: Int,

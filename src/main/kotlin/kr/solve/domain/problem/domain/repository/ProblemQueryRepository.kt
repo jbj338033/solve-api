@@ -10,19 +10,18 @@ import kr.solve.domain.problem.domain.enums.ProblemType
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Repository
 class ProblemQueryRepository(
     private val databaseClient: DatabaseClient,
 ) {
     fun findWithFilters(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
         difficulties: List<ProblemDifficulty>?,
         type: ProblemType?,
         query: String?,
-        tagIds: List<UUID>?,
+        tagIds: List<Long>?,
         sort: ProblemSort,
     ): Flow<Problem> {
         val conditions = mutableListOf("p.is_public = true")
@@ -96,11 +95,10 @@ class ProblemQueryRepository(
 
     private fun Row.toProblem() =
         Problem(
-            id = get("id", UUID::class.java)!!,
-            version = get("version", Long::class.javaObjectType)?.toLong(),
+            id = get("id", Long::class.javaObjectType)!!,
+            version = get("version", Long::class.javaObjectType),
             createdAt = get("created_at", LocalDateTime::class.java),
             updatedAt = get("updated_at", LocalDateTime::class.java),
-            number = get("number", Int::class.javaObjectType)!!,
             title = get("title", String::class.java)!!,
             description = get("description", String::class.java)!!,
             inputFormat = get("input_format", String::class.java)!!,
@@ -108,7 +106,7 @@ class ProblemQueryRepository(
             difficulty = ProblemDifficulty.valueOf(get("difficulty", String::class.java)!!),
             timeLimit = get("time_limit", Int::class.javaObjectType)!!,
             memoryLimit = get("memory_limit", Int::class.javaObjectType)!!,
-            authorId = get("author_id", UUID::class.java)!!,
+            authorId = get("author_id", Long::class.javaObjectType)!!,
             isPublic = get("is_public", Boolean::class.javaObjectType)!!,
             type = ProblemType.valueOf(get("type", String::class.java)!!),
             checkerCode = get("checker_code", String::class.java),

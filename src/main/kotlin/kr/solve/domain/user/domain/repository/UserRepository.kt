@@ -6,14 +6,13 @@ import org.springframework.data.r2dbc.repository.Modifying
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import java.time.LocalDate
-import java.util.UUID
 
-interface UserRepository : CoroutineCrudRepository<User, UUID> {
+interface UserRepository : CoroutineCrudRepository<User, Long> {
     suspend fun findByUsername(username: String): User?
 
     suspend fun existsByUsername(username: String): Boolean
 
-    fun findAllByIdIn(ids: List<UUID>): Flow<User>
+    fun findAllByIdIn(ids: List<Long>): Flow<User>
 
     fun findAllByOrderByProblemRatingDesc(): Flow<User>
 
@@ -39,7 +38,7 @@ interface UserRepository : CoroutineCrudRepository<User, UUID> {
         """,
     )
     suspend fun updateStreak(
-        userId: UUID,
+        userId: Long,
         today: LocalDate,
         yesterday: LocalDate,
     )

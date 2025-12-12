@@ -4,12 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import kr.solve.domain.problem.domain.entity.Problem
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
-import java.util.UUID
 
-interface ProblemRepository : CoroutineCrudRepository<Problem, UUID> {
-    suspend fun findByNumber(number: Int): Problem?
-
-    suspend fun existsByNumber(number: Int): Boolean
+interface ProblemRepository : CoroutineCrudRepository<Problem, Long> {
     @Query(
         """
         SELECT * FROM problems
@@ -19,7 +15,7 @@ interface ProblemRepository : CoroutineCrudRepository<Problem, UUID> {
         """,
     )
     fun findAllByIsPublicTrueOrderByIdDesc(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): Flow<Problem>
 
@@ -32,12 +28,12 @@ interface ProblemRepository : CoroutineCrudRepository<Problem, UUID> {
         """,
     )
     fun findAllByOrderByIdDesc(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): Flow<Problem>
 
-    fun findAllByAuthorId(authorId: UUID): Flow<Problem>
+    fun findAllByAuthorId(authorId: Long): Flow<Problem>
 
     @Query("SELECT * FROM problems WHERE id IN (:ids)")
-    fun findAllByIdIn(ids: List<UUID>): Flow<Problem>
+    fun findAllByIdIn(ids: List<Long>): Flow<Problem>
 }

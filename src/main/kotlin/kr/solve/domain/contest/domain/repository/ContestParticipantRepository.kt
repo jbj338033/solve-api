@@ -3,29 +3,28 @@ package kr.solve.domain.contest.domain.repository
 import kotlinx.coroutines.flow.Flow
 import kr.solve.domain.contest.domain.entity.ContestParticipant
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
-import java.util.UUID
 
-interface ContestParticipantRepository : CoroutineCrudRepository<ContestParticipant, UUID> {
-    fun findAllByContestIdOrderByTotalScoreDescPenaltyAsc(contestId: UUID): Flow<ContestParticipant>
+interface ContestParticipantRepository : CoroutineCrudRepository<ContestParticipant, Long> {
+    fun findAllByContestIdOrderByTotalScoreDescPenaltyAsc(contestId: Long): Flow<ContestParticipant>
 
-    fun findAllByUserId(userId: UUID): Flow<ContestParticipant>
+    fun findAllByUserId(userId: Long): Flow<ContestParticipant>
 
     suspend fun findByContestIdAndUserId(
-        contestId: UUID,
-        userId: UUID,
+        contestId: Long,
+        userId: Long,
     ): ContestParticipant?
 
     suspend fun existsByContestIdAndUserId(
-        contestId: UUID,
-        userId: UUID,
+        contestId: Long,
+        userId: Long,
     ): Boolean
 
-    suspend fun countByContestId(contestId: UUID): Long
+    suspend fun countByContestId(contestId: Long): Long
 
     suspend fun deleteByContestIdAndUserId(
-        contestId: UUID,
-        userId: UUID,
+        contestId: Long,
+        userId: Long,
     )
 
-    suspend fun deleteAllByContestId(contestId: UUID)
+    suspend fun deleteAllByContestId(contestId: Long)
 }

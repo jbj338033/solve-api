@@ -7,60 +7,59 @@ import kr.solve.domain.submission.domain.enums.SubmissionStatus
 import org.springframework.data.r2dbc.repository.Modifying
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
-import java.util.UUID
 
-interface SubmissionRepository : CoroutineCrudRepository<Submission, UUID> {
-    suspend fun countByUserId(userId: UUID): Long
+interface SubmissionRepository : CoroutineCrudRepository<Submission, Long> {
+    suspend fun countByUserId(userId: Long): Long
 
     @Query("SELECT DISTINCT problem_id FROM submissions WHERE user_id = :userId AND result = 'ACCEPTED'")
-    fun findSolvedProblemIdsByUserId(userId: UUID): Flow<UUID>
+    fun findSolvedProblemIdsByUserId(userId: Long): Flow<Long>
 
     @Query("SELECT DISTINCT problem_id FROM submissions WHERE user_id = :userId AND problem_id = ANY(:problemIds) AND result = 'ACCEPTED'")
-    fun findSolvedProblemIdsByUserIdAndProblemIds(userId: UUID, problemIds: Array<UUID>): Flow<UUID>
+    fun findSolvedProblemIdsByUserIdAndProblemIds(userId: Long, problemIds: Array<Long>): Flow<Long>
 
     @Query("SELECT DISTINCT problem_id FROM submissions WHERE user_id = :userId AND problem_id = ANY(:problemIds)")
-    fun findAttemptedProblemIdsByUserIdAndProblemIds(userId: UUID, problemIds: Array<UUID>): Flow<UUID>
+    fun findAttemptedProblemIdsByUserIdAndProblemIds(userId: Long, problemIds: Array<Long>): Flow<Long>
 
     suspend fun existsByUserIdAndProblemIdAndResult(
-        userId: UUID,
-        problemId: UUID,
+        userId: Long,
+        problemId: Long,
         result: JudgeResult,
     ): Boolean
 
     suspend fun existsByUserIdAndProblemId(
-        userId: UUID,
-        problemId: UUID,
+        userId: Long,
+        problemId: Long,
     ): Boolean
 
     @Query("SELECT * FROM submissions WHERE (:cursor IS NULL OR id < :cursor) ORDER BY id DESC LIMIT :limit")
     fun findAllByOrderByIdDesc(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
     ): Flow<Submission>
 
     @Query("SELECT * FROM submissions WHERE problem_id = :problemId AND (:cursor IS NULL OR id < :cursor) ORDER BY id DESC LIMIT :limit")
     fun findAllByProblemIdOrderByIdDesc(
-        problemId: UUID,
-        cursor: UUID?,
+        problemId: Long,
+        cursor: Long?,
         limit: Int,
     ): Flow<Submission>
 
     @Query("SELECT * FROM submissions WHERE user_id = :userId AND (:cursor IS NULL OR id < :cursor) ORDER BY id DESC LIMIT :limit")
     fun findAllByUserIdOrderByIdDesc(
-        userId: UUID,
-        cursor: UUID?,
+        userId: Long,
+        cursor: Long?,
         limit: Int,
     ): Flow<Submission>
 
     fun findAllByUserIdAndProblemId(
-        userId: UUID,
-        problemId: UUID,
+        userId: Long,
+        problemId: Long,
     ): Flow<Submission>
 
     @Modifying
     @Query("UPDATE submissions SET status = :status WHERE id = :id")
     suspend fun updateStatus(
-        id: UUID,
+        id: Long,
         status: SubmissionStatus,
     )
 
@@ -74,7 +73,7 @@ interface SubmissionRepository : CoroutineCrudRepository<Submission, UUID> {
         """,
     )
     suspend fun updateResult(
-        id: UUID,
+        id: Long,
         status: SubmissionStatus,
         result: JudgeResult,
         score: Int,

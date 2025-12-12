@@ -10,17 +10,16 @@ import kr.solve.domain.submission.domain.enums.SubmissionStatus
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Repository
 class SubmissionQueryRepository(
     private val databaseClient: DatabaseClient,
 ) {
     fun findWithFilters(
-        cursor: UUID?,
+        cursor: Long?,
         limit: Int,
-        userId: UUID?,
-        problemId: UUID?,
+        userId: Long?,
+        problemId: Long?,
         language: Language?,
         result: JudgeResult?,
     ): Flow<Submission> {
@@ -70,13 +69,13 @@ class SubmissionQueryRepository(
     }
 
     private fun Row.toSubmission() = Submission(
-        id = get("id", UUID::class.java)!!,
-        version = get("version", Long::class.javaObjectType)?.toLong(),
+        id = get("id", Long::class.javaObjectType)!!,
+        version = get("version", Long::class.javaObjectType),
         createdAt = get("created_at", LocalDateTime::class.java),
         updatedAt = get("updated_at", LocalDateTime::class.java),
-        problemId = get("problem_id", UUID::class.java)!!,
-        userId = get("user_id", UUID::class.java)!!,
-        contestId = get("contest_id", UUID::class.java),
+        problemId = get("problem_id", Long::class.javaObjectType)!!,
+        userId = get("user_id", Long::class.javaObjectType)!!,
+        contestId = get("contest_id", Long::class.javaObjectType),
         language = Language.valueOf(get("language", String::class.java)!!),
         code = get("code", String::class.java)!!,
         status = SubmissionStatus.valueOf(get("status", String::class.java)!!),
