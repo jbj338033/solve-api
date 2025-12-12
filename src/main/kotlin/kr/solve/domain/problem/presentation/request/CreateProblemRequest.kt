@@ -37,7 +37,6 @@ data class CreateProblemRequest(
 )
 
 data class ExampleRequest(
-    @field:NotBlank
     val input: String,
     @field:NotBlank
     val output: String,
