@@ -1,5 +1,6 @@
 package kr.solve.infra.worker
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -9,6 +10,8 @@ import kr.solve.infra.judge.JudgeRequest
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
+
+private val log = KotlinLogging.logger {}
 
 @Component
 class WorkerClient(
@@ -29,6 +32,7 @@ class WorkerClient(
         flow {
             val streamKey = judgeStreamKey(job.submissionId.toString())
             val payload = jsonMapper.writeValueAsString(job)
+            log.info { "Judge job: submissionId=${job.submissionId}, testcases=${job.testcases.size}" }
 
             redisTemplate
                 .opsForList()
@@ -60,6 +64,8 @@ class WorkerClient(
                     val event =
                         runCatching {
                             jsonMapper.readValue(data, JudgeEvent::class.java)
+                        }.onFailure { e ->
+                            log.error(e) { "Failed to parse JudgeEvent: $data" }
                         }.getOrNull() ?: continue
 
                     emit(event)
