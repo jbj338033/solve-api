@@ -20,12 +20,16 @@ class SubmissionWebSocketHandler(
     private val jsonMapper: JsonMapper,
 ) : WebSocketHandler {
     override fun handle(session: WebSocketSession): Mono<Void> {
+        logger.info { "WebSocket connected: ${session.id}" }
+
         val container = ReactiveRedisMessageListenerContainer(connectionFactory)
         val topic = ChannelTopic(SubmissionEventPublisher.CHANNEL)
 
         val output =
             container
                 .receive(topic)
+                .doOnSubscribe { logger.info { "Subscribed to Redis channel: ${topic.topic}" } }
+                .doOnNext { logger.info { "Received from Redis: ${it.message}" } }
                 .mapNotNull { message ->
                     try {
                         val event = jsonMapper.readValue(message.message, SubmissionEvent::class.java)
@@ -39,6 +43,9 @@ class SubmissionWebSocketHandler(
         return session
             .send(output)
             .and(session.receive().then())
-            .doFinally { container.destroyLater().subscribe() }
+            .doFinally {
+                logger.info { "WebSocket disconnected: ${session.id}" }
+                container.destroyLater().subscribe()
+            }
     }
 }
