@@ -38,6 +38,7 @@ class SubmissionWebSocketHandler(
 
         return session
             .send(output)
+            .and(session.receive().then())
             .doFinally { container.destroyLater().subscribe() }
     }
 }
