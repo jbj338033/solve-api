@@ -1,7 +1,8 @@
 package kr.solve.domain.submission.presentation.websocket
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kr.solve.infra.judge.SubmissionEvent
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
 import kr.solve.infra.judge.SubmissionEventPublisher
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
 import org.springframework.data.redis.listener.ChannelTopic
@@ -10,42 +11,47 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.WebSocketSession
 import reactor.core.publisher.Mono
-import tools.jackson.databind.json.JsonMapper
+import reactor.core.publisher.Sinks
+import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
 
 @Component
 class SubmissionWebSocketHandler(
-    private val connectionFactory: ReactiveRedisConnectionFactory,
-    private val jsonMapper: JsonMapper,
+    connectionFactory: ReactiveRedisConnectionFactory,
 ) : WebSocketHandler {
-    override fun handle(session: WebSocketSession): Mono<Void> {
-        logger.info { "WebSocket connected: ${session.id}" }
+    private val container = ReactiveRedisMessageListenerContainer(connectionFactory)
+    private val topic = ChannelTopic(SubmissionEventPublisher.CHANNEL)
+    private val sessions = ConcurrentHashMap<String, Sinks.Many<String>>()
 
-        val container = ReactiveRedisMessageListenerContainer(connectionFactory)
-        val topic = ChannelTopic(SubmissionEventPublisher.CHANNEL)
-
-        val output =
-            container
-                .receive(topic)
-                .doOnSubscribe { logger.info { "Subscribed to Redis channel: ${topic.topic}" } }
-                .doOnNext { logger.info { "Received from Redis: ${it.message}" } }
-                .mapNotNull { message ->
-                    try {
-                        val event = jsonMapper.readValue(message.message, SubmissionEvent::class.java)
-                        session.textMessage(jsonMapper.writeValueAsString(event))
-                    } catch (e: Exception) {
-                        logger.error(e) { "Failed to parse message" }
-                        null
-                    }
+    @PostConstruct
+    fun init() {
+        container
+            .receive(topic)
+            .subscribe { message ->
+                val json = message.message
+                sessions.values.forEach { sink ->
+                    sink.tryEmitNext(json)
                 }
-
-        return session
-            .send(output)
-            .and(session.receive().then())
-            .doFinally {
-                logger.info { "WebSocket disconnected: ${session.id}" }
-                container.destroyLater().subscribe()
             }
+        logger.info { "SubmissionWebSocketHandler initialized, subscribed to ${topic.topic}" }
+    }
+
+    @PreDestroy
+    fun destroy() {
+        container.destroyLater().subscribe()
+    }
+
+    override fun handle(session: WebSocketSession): Mono<Void> {
+        val sink = Sinks.many().unicast().onBackpressureBuffer<String>()
+        sessions[session.id] = sink
+
+        val output = session.send(sink.asFlux().map { session.textMessage(it) })
+        val input = session.receive().then()
+
+        return Mono
+            .zip(input, output)
+            .doFinally { sessions.remove(session.id) }
+            .then()
     }
 }
