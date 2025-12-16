@@ -24,11 +24,20 @@ class SubmissionWebSocketHandler(
     private val topic = ChannelTopic(SubmissionEventPublisher.CHANNEL)
     private val sessions = ConcurrentHashMap<String, Sinks.Many<String>>()
 
+    init {
+        logger.info { "SubmissionWebSocketHandler constructor called" }
+    }
+
     @PostConstruct
     fun init() {
+        logger.info { "SubmissionWebSocketHandler @PostConstruct called" }
         container
             .receive(topic)
+            .doOnSubscribe { logger.info { "Redis subscription started for ${topic.topic}" } }
+            .doOnNext { logger.info { "Redis message received: ${it.message.take(100)}" } }
+            .doOnError { logger.error(it) { "Redis subscription error" } }
             .subscribe { message ->
+                logger.info { "Broadcasting to ${sessions.size} sessions" }
                 val json = message.message
                 sessions.values.forEach { sink ->
                     sink.tryEmitNext(json)
@@ -39,19 +48,26 @@ class SubmissionWebSocketHandler(
 
     @PreDestroy
     fun destroy() {
+        logger.info { "SubmissionWebSocketHandler @PreDestroy called" }
         container.destroyLater().subscribe()
     }
 
     override fun handle(session: WebSocketSession): Mono<Void> {
+        logger.info { "WebSocket handle() called: ${session.id}" }
         val sink = Sinks.many().unicast().onBackpressureBuffer<String>()
         sessions[session.id] = sink
+        logger.info { "Session registered: ${session.id}, total sessions: ${sessions.size}" }
 
         val output = session.send(sink.asFlux().map { session.textMessage(it) })
         val input = session.receive().then()
 
         return Mono
             .zip(input, output)
-            .doFinally { sessions.remove(session.id) }
+            .doOnSubscribe { logger.info { "WebSocket Mono subscribed: ${session.id}" } }
+            .doFinally {
+                logger.info { "WebSocket disconnected: ${session.id}" }
+                sessions.remove(session.id)
+            }
             .then()
     }
 }
