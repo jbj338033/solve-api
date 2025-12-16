@@ -17,7 +17,6 @@ data class Problem(
     @Version val version: Long? = null,
     @CreatedDate @Column("created_at") val createdAt: LocalDateTime? = null,
     @LastModifiedDate @Column("updated_at") val updatedAt: LocalDateTime? = null,
-    val number: Int? = null,
     val status: ProblemStatus = ProblemStatus.DRAFT,
     val title: String,
     val description: String,

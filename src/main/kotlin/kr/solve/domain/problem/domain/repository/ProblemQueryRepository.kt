@@ -100,7 +100,6 @@ class ProblemQueryRepository(
             version = get("version", Long::class.javaObjectType),
             createdAt = get("created_at", LocalDateTime::class.java),
             updatedAt = get("updated_at", LocalDateTime::class.java),
-            number = get("number", Int::class.javaObjectType),
             status = ProblemStatus.valueOf(get("status", String::class.java)!!),
             title = get("title", String::class.java)!!,
             description = get("description", String::class.java)!!,

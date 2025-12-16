@@ -116,6 +116,7 @@ CREATE TABLE problems (
     version BIGINT,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
+    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT',
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     input_format TEXT NOT NULL,
@@ -305,6 +306,7 @@ CREATE INDEX idx_user_tier_histories_user_id ON user_tier_histories(user_id);
 CREATE INDEX idx_user_rating_histories_user_id ON user_rating_histories(user_id);
 CREATE INDEX idx_user_activities_user_id ON user_activities(user_id);
 CREATE INDEX idx_problems_author_id ON problems(author_id);
+CREATE INDEX idx_problems_status ON problems(status);
 CREATE INDEX idx_problem_examples_problem_id ON problem_examples(problem_id);
 CREATE INDEX idx_problem_subtasks_problem_id ON problem_subtasks(problem_id);
 CREATE INDEX idx_problem_test_cases_problem_id ON problem_test_cases(problem_id);
