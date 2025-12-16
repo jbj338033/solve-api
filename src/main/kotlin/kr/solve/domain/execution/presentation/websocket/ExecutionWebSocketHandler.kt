@@ -60,7 +60,7 @@ class ExecutionWebSocketHandler(
                     scope.cancel()
                 }.then()
 
-        return Mono.zip(input, output).then()
+        return output.and(input)
     }
 
     private suspend fun handleMessage(
