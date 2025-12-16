@@ -113,6 +113,8 @@ class SubmissionService(
         language: Language,
         code: String,
     ): Pair<Long, Flow<JudgeEvent>> {
+        log.info { "[Judge] Starting: userId=$userId, problemId=$problemId, contestId=$contestId, language=$language, codeLength=${code.length}" }
+
         val user = userRepository.findById(userId)
             ?: throw BusinessException(SubmissionError.USER_NOT_FOUND)
 
@@ -120,6 +122,7 @@ class SubmissionService(
             ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
 
         if (!problem.isPublic && problem.authorId != userId) {
+            log.warn { "[Judge] Access denied: userId=$userId, problemId=$problemId, isPublic=${problem.isPublic}, authorId=${problem.authorId}" }
             throw BusinessException(SubmissionError.PROBLEM_ACCESS_DENIED)
         }
 
@@ -140,6 +143,8 @@ class SubmissionService(
             .toList()
             .map { JudgeRequest.TestCase(id = it.id!!, input = it.input, output = it.output, order = it.order) }
 
+        log.debug { "[Judge] Problem loaded: timeLimit=${problem.timeLimit}ms, memoryLimit=${problem.memoryLimit}MB, testcases=${testcases.size}" }
+
         val submission = submissionRepository.save(
             Submission(
                 problemId = problem.id!!,
@@ -150,10 +155,13 @@ class SubmissionService(
             )
         )
 
+        log.info { "[Judge:${submission.id}] Submission created: problemId=${problem.id}, language=$language" }
+
         submissionEventPublisher.publishNew(submission, problem, contest, user)
 
         val events = flow {
             try {
+                log.debug { "[Judge:${submission.id}] Status -> JUDGING" }
                 submissionRepository.updateStatus(submission.id!!, SubmissionStatus.JUDGING)
                 submissionEventPublisher.publishUpdate(submission, problem, contest, user, SubmissionStatus.JUDGING)
 
@@ -163,6 +171,7 @@ class SubmissionService(
                 var finalMemory = 0
                 var finalError: String? = null
 
+                log.debug { "[Judge:${submission.id}] Calling judgeService.judge()" }
                 judgeService.judge(
                     JudgeRequest(
                         submissionId = submission.id!!,
@@ -175,6 +184,7 @@ class SubmissionService(
                 ).collect { event ->
                     when (event) {
                         is JudgeEvent.Progress -> {
+                            log.debug { "[Judge:${submission.id}] Progress: testcase=${event.testcaseId}, result=${event.result}, time=${event.time}ms, memory=${event.memory}KB" }
                             submissionResultRepository.save(
                                 SubmissionResult(
                                     submissionId = submission.id!!,
@@ -190,6 +200,7 @@ class SubmissionService(
                             )
                         }
                         is JudgeEvent.Complete -> {
+                            log.info { "[Judge:${submission.id}] Complete: result=${event.result}, score=${event.score}, time=${event.time}ms, memory=${event.memory}KB, error=${event.error}" }
                             finalResult = event.result
                             finalScore = event.score
                             finalTime = event.time
@@ -201,6 +212,7 @@ class SubmissionService(
                 }
 
                 withContext(NonCancellable) {
+                    log.debug { "[Judge:${submission.id}] Saving final result: status=COMPLETED, result=$finalResult, score=$finalScore" }
                     submissionRepository.updateResult(
                         submission.id!!, SubmissionStatus.COMPLETED,
                         finalResult, finalScore, finalTime, finalMemory, finalError,
@@ -210,10 +222,11 @@ class SubmissionService(
                         finalResult, finalScore, finalTime, finalMemory,
                     )
                     updateUserActivity(submission, finalResult)
+                    log.info { "[Judge:${submission.id}] Finished: result=$finalResult, score=$finalScore" }
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                log.error(e) { "Failed to judge submission ${submission.id}" }
+                log.error(e) { "[Judge:${submission.id}] Failed with exception" }
                 withContext(NonCancellable) {
                     submissionRepository.updateResult(
                         submission.id!!, SubmissionStatus.COMPLETED,
