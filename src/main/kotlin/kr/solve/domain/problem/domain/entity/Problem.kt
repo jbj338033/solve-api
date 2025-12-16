@@ -1,6 +1,7 @@
 package kr.solve.domain.problem.domain.entity
 
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
+import kr.solve.domain.problem.domain.enums.ProblemStatus
 import kr.solve.domain.problem.domain.enums.ProblemType
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.Id
@@ -16,6 +17,8 @@ data class Problem(
     @Version val version: Long? = null,
     @CreatedDate @Column("created_at") val createdAt: LocalDateTime? = null,
     @LastModifiedDate @Column("updated_at") val updatedAt: LocalDateTime? = null,
+    val number: Int? = null,
+    val status: ProblemStatus = ProblemStatus.DRAFT,
     val title: String,
     val description: String,
     val inputFormat: String,
