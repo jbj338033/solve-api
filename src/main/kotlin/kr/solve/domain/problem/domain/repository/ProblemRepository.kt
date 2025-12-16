@@ -9,12 +9,12 @@ interface ProblemRepository : CoroutineCrudRepository<Problem, Long> {
     @Query(
         """
         SELECT * FROM problems
-        WHERE is_public = true AND (:cursor IS NULL OR id < :cursor)
+        WHERE status = 'APPROVED' AND is_public = true AND (:cursor IS NULL OR id < :cursor)
         ORDER BY id DESC
         LIMIT :limit
         """,
     )
-    fun findAllByIsPublicTrueOrderByIdDesc(
+    fun findAllApprovedAndPublic(
         cursor: Long?,
         limit: Int,
     ): Flow<Problem>

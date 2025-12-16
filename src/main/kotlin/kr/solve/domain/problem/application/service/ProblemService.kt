@@ -7,6 +7,7 @@ import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.entity.ProblemExample
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemSort
+import kr.solve.domain.problem.domain.enums.ProblemStatus
 import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.problem.domain.enums.SolveStatus
 import kr.solve.domain.problem.domain.error.ProblemError
@@ -87,7 +88,7 @@ class ProblemService(
     suspend fun getProblem(problemId: Long): ProblemResponse.Detail {
         val problem = problemRepository.findById(problemId)
             ?: throw BusinessException(ProblemError.NOT_FOUND)
-        if (!problem.isPublic) {
+        if (problem.status != ProblemStatus.APPROVED || !problem.isPublic) {
             throw BusinessException(ProblemError.ACCESS_DENIED)
         }
 

@@ -6,6 +6,7 @@ import kotlinx.coroutines.reactive.asFlow
 import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemSort
+import kr.solve.domain.problem.domain.enums.ProblemStatus
 import kr.solve.domain.problem.domain.enums.ProblemType
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
@@ -24,7 +25,7 @@ class ProblemQueryRepository(
         tagIds: List<Long>?,
         sort: ProblemSort,
     ): Flow<Problem> {
-        val conditions = mutableListOf("p.is_public = true")
+        val conditions = mutableListOf("p.status = 'APPROVED'", "p.is_public = true")
         val params = mutableMapOf<String, Any>()
 
         if (cursor != null) {
@@ -99,6 +100,8 @@ class ProblemQueryRepository(
             version = get("version", Long::class.javaObjectType),
             createdAt = get("created_at", LocalDateTime::class.java),
             updatedAt = get("updated_at", LocalDateTime::class.java),
+            number = get("number", Int::class.javaObjectType),
+            status = ProblemStatus.valueOf(get("status", String::class.java)!!),
             title = get("title", String::class.java)!!,
             description = get("description", String::class.java)!!,
             inputFormat = get("input_format", String::class.java)!!,
