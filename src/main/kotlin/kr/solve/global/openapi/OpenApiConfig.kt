@@ -87,11 +87,72 @@ class OpenApiConfig {
 
                         ---
 
-                        ### Submission Events
+                        ### Code Judge (Individual Submission)
+
+                        **URL:** `ws://localhost:8080/ws/judge`
+
+                        개별 코드 제출 및 채점 결과를 실시간으로 수신합니다. 문제 풀이 페이지에서 사용합니다.
+
+                        #### Message Types
+
+                        **Client → Server:**
+
+                        | Type | Data | Description |
+                        |------|------|-------------|
+                        | `INIT` | `{token, problemId, contestId?, language, code}` | 제출 및 채점 시작 |
+
+                        **Server → Client:**
+
+                        | Type | Data | Description |
+                        |------|------|-------------|
+                        | `CREATED` | `{submissionId}` | 제출 생성 완료 |
+                        | `PROGRESS` | `{testcaseId, result, time, memory, score, progress}` | 테스트케이스 채점 진행 |
+                        | `COMPLETE` | `{result, score, time, memory, error?}` | 채점 완료 |
+                        | `ERROR` | `string` | 에러 메시지 |
+
+                        #### Example
+
+                        ```javascript
+                        const ws = new WebSocket('ws://localhost:8080/ws/judge');
+
+                        ws.onopen = () => {
+                          ws.send(JSON.stringify({
+                            type: 'INIT',
+                            data: {
+                              token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+                              problemId: 1,
+                              language: 'PYTHON',
+                              code: 'print(sum(map(int, input().split())))'
+                            }
+                          }));
+                        };
+
+                        ws.onmessage = (event) => {
+                          const msg = JSON.parse(event.data);
+                          switch (msg.type) {
+                            case 'CREATED':
+                              console.log('Submission ID:', msg.data.submissionId);
+                              break;
+                            case 'PROGRESS':
+                              console.log('Progress: ' + msg.data.progress + '%, Score: ' + msg.data.score);
+                              break;
+                            case 'COMPLETE':
+                              console.log('Result:', msg.data.result, 'Score:', msg.data.score);
+                              break;
+                            case 'ERROR':
+                              console.error('Error:', msg.data);
+                              break;
+                          }
+                        };
+                        ```
+
+                        ---
+
+                        ### Submission Feed (List Updates)
 
                         **URL:** `ws://localhost:8080/ws/submissions`
 
-                        제출 생성 및 채점 상태 변경을 실시간으로 수신합니다.
+                        모든 제출의 생성 및 채점 상태 변경을 실시간으로 브로드캐스트합니다. 제출 목록 페이지에서 사용합니다.
 
                         #### Server → Client
 
@@ -105,20 +166,9 @@ class OpenApiConfig {
                           "type": "NEW" | "UPDATE",
                           "data": {
                             "id": 1,
-                            "problem": {
-                              "id": 1,
-                              "title": "A+B"
-                            },
-                            "contest": {
-                              "id": 1,
-                              "title": "2024 신입생 대회"
-                            } | null,
-                            "user": {
-                              "id": 1,
-                              "username": "johndoe",
-                              "displayName": "John Doe",
-                              "profileImage": "https://..."
-                            },
+                            "problem": { "id": 1, "title": "A+B" },
+                            "contest": { "id": 1, "title": "2024 신입생 대회" } | null,
+                            "user": { "id": 1, "username": "johndoe", "displayName": "John Doe", "profileImage": "https://..." },
                             "language": "PYTHON",
                             "status": "PENDING" | "JUDGING" | "COMPLETED",
                             "result": "ACCEPTED" | "WRONG_ANSWER" | ... | null,
@@ -137,12 +187,9 @@ class OpenApiConfig {
 
                         ws.onmessage = (event) => {
                           const { type, data } = JSON.parse(event.data);
-
                           if (type === 'NEW') {
-                            // 새 제출 목록에 추가
                             submissions.unshift(data);
                           } else if (type === 'UPDATE') {
-                            // 해당 제출 상태 업데이트
                             const idx = submissions.findIndex(s => s.id === data.id);
                             if (idx >= 0) submissions[idx] = { ...submissions[idx], ...data };
                           }
