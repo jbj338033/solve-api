@@ -24,7 +24,7 @@ data class ErrorResponse(
             val error = exception.error
             val response =
                 ErrorResponse(
-                    code = (error as Enum<*>).name,
+                    code = error.code,
                     status = error.status.value(),
                     message = exception.message ?: error.message,
                 )

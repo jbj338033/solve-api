@@ -13,15 +13,15 @@ private val logger = KotlinLogging.logger {}
 @RestControllerAdvice
 class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException::class)
-    fun handleBusinessException(exception: BusinessException): ResponseEntity<ErrorResponse> = ErrorResponse.of(exception)
+    suspend fun handleBusinessException(exception: BusinessException): ResponseEntity<ErrorResponse> = ErrorResponse.of(exception)
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleMethodArgumentNotValidException(exception: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
+    suspend fun handleMethodArgumentNotValidException(exception: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
         return ErrorResponse.of(CommonError.InvalidRequest)
     }
 
     @ExceptionHandler(Exception::class)
-    fun handleException(exception: Exception): ResponseEntity<ErrorResponse> {
+    suspend fun handleException(exception: Exception): ResponseEntity<ErrorResponse> {
         logger.error(exception) { "Unhandled exception occurred" }
         return ErrorResponse.of(CommonError.InternalServerError)
     }
