@@ -6,13 +6,14 @@ import kr.solve.common.pagination.CursorPage
 import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.entity.ProblemExample
 import kr.solve.domain.problem.domain.entity.ProblemTestCase
-import kr.solve.domain.problem.domain.enums.ProblemStatus
 import kr.solve.domain.problem.domain.error.ProblemError
 import kr.solve.domain.user.domain.error.UserError
 import kr.solve.domain.problem.domain.repository.ProblemExampleRepository
 import kr.solve.domain.problem.domain.repository.ProblemRepository
+import kr.solve.domain.problem.domain.repository.ProblemSourceRepository
 import kr.solve.domain.problem.domain.repository.ProblemTagRepository
 import kr.solve.domain.problem.domain.repository.ProblemTestCaseRepository
+import kr.solve.domain.problem.presentation.response.ProblemSourceResponse
 import kr.solve.domain.problem.presentation.request.AdminCreateProblemRequest
 import kr.solve.domain.problem.presentation.request.AdminExampleRequest
 import kr.solve.domain.problem.presentation.request.AdminTestCaseRequest
@@ -32,6 +33,7 @@ class AdminProblemService(
     private val problemRepository: ProblemRepository,
     private val problemExampleRepository: ProblemExampleRepository,
     private val problemTestCaseRepository: ProblemTestCaseRepository,
+    private val problemSourceRepository: ProblemSourceRepository,
     private val problemTagRepository: ProblemTagRepository,
     private val tagRepository: TagRepository,
     private val userRepository: UserRepository,
@@ -151,31 +153,19 @@ class AdminProblemService(
         problemRepository.delete(problem)
     }
 
-    @Transactional
-    suspend fun approveProblem(problemId: Long) {
-        val problem =
-            problemRepository.findById(problemId)
-                ?: throw BusinessException(ProblemError.NotFound)
+    suspend fun getSource(problemId: Long): ProblemSourceResponse {
+        problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NotFound)
 
-        if (problem.status != ProblemStatus.PENDING) {
-            throw BusinessException(ProblemError.CannotApprove)
-        }
+        val source = problemSourceRepository.findByProblemId(problemId)
+            ?: throw BusinessException(ProblemError.SolutionNotFound)
 
-        problemRepository.save(problem.copy(status = ProblemStatus.APPROVED))
-    }
-
-    @Transactional
-    suspend fun rejectProblem(problemId: Long, reason: String) {
-        val problem =
-            problemRepository.findById(problemId)
-                ?: throw BusinessException(ProblemError.NotFound)
-
-        if (problem.status != ProblemStatus.PENDING) {
-            throw BusinessException(ProblemError.CannotReject)
-        }
-
-        problemRepository.save(problem.copy(status = ProblemStatus.REJECTED))
-        // TODO: reason을 저장하는 로직 추가 필요 (예: 알림 발송, 반려 사유 저장 등)
+        return ProblemSourceResponse(
+            solutionCode = source.solutionCode,
+            solutionLanguage = source.solutionLanguage,
+            generatorCode = source.generatorCode,
+            generatorLanguage = source.generatorLanguage,
+        )
     }
 
     private suspend fun saveExamples(
