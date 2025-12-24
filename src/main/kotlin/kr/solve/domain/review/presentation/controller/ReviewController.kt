@@ -60,6 +60,7 @@ class ReviewController(
 
     @Operation(summary = "코멘트 수정")
     @PatchMapping("/comments/{commentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateComment(
         @PathVariable commentId: Long,
         @Valid @RequestBody request: UpdateCommentRequest,

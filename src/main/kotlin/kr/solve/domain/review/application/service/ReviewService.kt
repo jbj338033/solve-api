@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.toList
 import kr.solve.domain.problem.domain.enums.ProblemStatus
 import kr.solve.domain.problem.domain.error.ProblemError
 import kr.solve.domain.problem.domain.repository.ProblemRepository
+import kr.solve.domain.problem.domain.repository.ProblemSourceRepository
 import kr.solve.domain.review.domain.entity.ProblemReview
 import kr.solve.domain.review.domain.entity.ReviewComment
 import kr.solve.domain.review.domain.enums.ReviewStatus
@@ -25,12 +26,13 @@ import java.time.LocalDateTime
 @Service
 class ReviewService(
     private val problemRepository: ProblemRepository,
+    private val problemSourceRepository: ProblemSourceRepository,
     private val problemReviewRepository: ProblemReviewRepository,
     private val reviewCommentRepository: ReviewCommentRepository,
     private val userRepository: UserRepository,
 ) {
     @Transactional
-    suspend fun createReview(problemId: Long, request: CreateReviewRequest): ReviewResponse.Summary {
+    suspend fun createReview(problemId: Long, request: CreateReviewRequest): ReviewResponse.Id {
         val problem = problemRepository.findById(problemId)
             ?: throw BusinessException(ProblemError.NotFound)
 
@@ -41,6 +43,9 @@ class ReviewService(
         if (problem.status != ProblemStatus.DRAFT && problem.status != ProblemStatus.REJECTED) {
             throw BusinessException(ReviewError.CannotRequestReview)
         }
+
+        problemSourceRepository.findByProblemId(problemId)
+            ?: throw BusinessException(ProblemError.SolutionNotFound)
 
         val review = problemReviewRepository.save(
             ProblemReview(
@@ -62,17 +67,7 @@ class ReviewService(
 
         problemRepository.save(problem.copy(status = ProblemStatus.PENDING))
 
-        val requester = userRepository.findById(review.requesterId)!!
-
-        return ReviewResponse.Summary(
-            id = review.id!!,
-            problemId = review.problemId,
-            requester = requester.toAuthor(),
-            reviewer = null,
-            status = review.status,
-            createdAt = review.createdAt,
-            reviewedAt = review.reviewedAt,
-        )
+        return ReviewResponse.Id(review.id!!)
     }
 
     suspend fun getReviewsByProblemId(problemId: Long): List<ReviewResponse.Summary> {
@@ -141,7 +136,7 @@ class ReviewService(
     }
 
     @Transactional
-    suspend fun createComment(reviewId: Long, request: CreateCommentRequest): ReviewResponse.Comment {
+    suspend fun createComment(reviewId: Long, request: CreateCommentRequest): ReviewResponse.Id {
         val review = problemReviewRepository.findById(reviewId)
             ?: throw BusinessException(ReviewError.NotFound)
 
@@ -160,19 +155,11 @@ class ReviewService(
             ),
         )
 
-        val author = userRepository.findById(comment.authorId)!!
-
-        return ReviewResponse.Comment(
-            id = comment.id!!,
-            author = author.toAuthor(),
-            content = comment.content,
-            createdAt = comment.createdAt,
-            updatedAt = comment.updatedAt,
-        )
+        return ReviewResponse.Id(comment.id!!)
     }
 
     @Transactional
-    suspend fun updateComment(commentId: Long, request: UpdateCommentRequest): ReviewResponse.Comment {
+    suspend fun updateComment(commentId: Long, request: UpdateCommentRequest) {
         val comment = reviewCommentRepository.findById(commentId)
             ?: throw BusinessException(ReviewError.CommentNotFound)
 
@@ -180,16 +167,7 @@ class ReviewService(
             throw BusinessException(ReviewError.AccessDenied)
         }
 
-        val updated = reviewCommentRepository.save(comment.copy(content = request.content))
-        val author = userRepository.findById(updated.authorId)!!
-
-        return ReviewResponse.Comment(
-            id = updated.id!!,
-            author = author.toAuthor(),
-            content = updated.content,
-            createdAt = updated.createdAt,
-            updatedAt = updated.updatedAt,
-        )
+        reviewCommentRepository.save(comment.copy(content = request.content))
     }
 
     @Transactional

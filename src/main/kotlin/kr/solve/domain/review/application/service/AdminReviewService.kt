@@ -155,8 +155,8 @@ class AdminReviewService(
     }
 
     @Transactional
-    suspend fun createComment(reviewId: Long, request: CreateCommentRequest): ReviewResponse.Comment {
-        val review = problemReviewRepository.findById(reviewId)
+    suspend fun createComment(reviewId: Long, request: CreateCommentRequest): ReviewResponse.Id {
+        problemReviewRepository.findById(reviewId)
             ?: throw BusinessException(ReviewError.NotFound)
 
         val comment = reviewCommentRepository.save(
@@ -167,15 +167,7 @@ class AdminReviewService(
             ),
         )
 
-        val author = userRepository.findById(comment.authorId)!!
-
-        return ReviewResponse.Comment(
-            id = comment.id!!,
-            author = author.toAuthor(),
-            content = comment.content,
-            createdAt = comment.createdAt,
-            updatedAt = comment.updatedAt,
-        )
+        return ReviewResponse.Id(comment.id!!)
     }
 
     private fun kr.solve.domain.user.domain.entity.User.toAuthor() = ReviewResponse.Author(
