@@ -9,6 +9,7 @@ import kr.solve.domain.problem.domain.enums.ProblemDifficulty
 import kr.solve.domain.problem.domain.enums.ProblemSort
 import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.problem.presentation.request.CreateProblemRequest
+import kr.solve.domain.problem.presentation.request.ProblemSourceRequest
 import kr.solve.domain.problem.presentation.request.UpdateProblemRequest
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -52,6 +54,33 @@ class ProblemController(
     @GetMapping("/my")
     suspend fun getMyProblems() = problemService.getMyProblems()
 
+    @Operation(summary = "내 문제 상세 조회", security = [SecurityRequirement(name = "bearerAuth")])
+    @GetMapping("/my/{problemId}")
+    suspend fun getMyProblem(
+        @PathVariable problemId: Long,
+    ) = problemService.getMyProblem(problemId)
+
+    @Operation(summary = "정답 코드 조회", security = [SecurityRequirement(name = "bearerAuth")])
+    @GetMapping("/my/{problemId}/source")
+    suspend fun getSource(
+        @PathVariable problemId: Long,
+    ) = problemService.getSource(problemId)
+
+    @Operation(summary = "정답 코드 저장", security = [SecurityRequirement(name = "bearerAuth")])
+    @PutMapping("/my/{problemId}/source")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun saveSource(
+        @PathVariable problemId: Long,
+        @Valid @RequestBody request: ProblemSourceRequest,
+    ) = problemService.saveSource(problemId, request)
+
+    @Operation(summary = "정답 코드 삭제", security = [SecurityRequirement(name = "bearerAuth")])
+    @DeleteMapping("/my/{problemId}/source")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun deleteSource(
+        @PathVariable problemId: Long,
+    ) = problemService.deleteSource(problemId)
+
     @Operation(summary = "문제 상세 조회")
     @GetMapping("/{problemId}")
     suspend fun getProblem(
@@ -67,6 +96,7 @@ class ProblemController(
 
     @Operation(summary = "문제 수정", security = [SecurityRequirement(name = "bearerAuth")])
     @PatchMapping("/{problemId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun updateProblem(
         @PathVariable problemId: Long,
         @Valid @RequestBody request: UpdateProblemRequest,
@@ -78,11 +108,4 @@ class ProblemController(
     suspend fun deleteProblem(
         @PathVariable problemId: Long,
     ) = problemService.deleteProblem(problemId)
-
-    @Operation(summary = "문제 검수 요청", security = [SecurityRequirement(name = "bearerAuth")])
-    @PostMapping("/{problemId}/submit")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    suspend fun submitProblem(
-        @PathVariable problemId: Long,
-    ) = problemService.submitProblem(problemId)
 }
