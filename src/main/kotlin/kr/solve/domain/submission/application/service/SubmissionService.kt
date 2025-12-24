@@ -19,7 +19,10 @@ import kr.solve.domain.submission.domain.entity.SubmissionResult
 import kr.solve.domain.submission.domain.enums.JudgeResult
 import kr.solve.domain.submission.domain.enums.Language
 import kr.solve.domain.submission.domain.enums.SubmissionStatus
+import kr.solve.domain.contest.domain.error.ContestError
+import kr.solve.domain.problem.domain.error.ProblemError
 import kr.solve.domain.submission.domain.error.SubmissionError
+import kr.solve.domain.user.domain.error.UserError
 import kr.solve.domain.submission.domain.repository.SubmissionQueryRepository
 import kr.solve.domain.submission.domain.repository.SubmissionRepository
 import kr.solve.domain.submission.domain.repository.SubmissionResultRepository
@@ -96,12 +99,12 @@ class SubmissionService(
 
     suspend fun getSubmission(submissionId: Long): SubmissionResponse.Detail {
         val submission = submissionRepository.findById(submissionId)
-            ?: throw BusinessException(SubmissionError.NOT_FOUND)
+            ?: throw BusinessException(SubmissionError.NotFound)
         val problem = problemRepository.findById(submission.problemId)
-            ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
+            ?: throw BusinessException(ProblemError.NotFound)
         val contest = submission.contestId?.let { contestRepository.findById(it) }
         val user = userRepository.findById(submission.userId)
-            ?: throw BusinessException(SubmissionError.USER_NOT_FOUND)
+            ?: throw BusinessException(UserError.NotFound)
 
         return submission.toDetail(problem, contest, user)
     }
@@ -116,24 +119,24 @@ class SubmissionService(
         log.info { "[Judge] Starting: userId=$userId, problemId=$problemId, contestId=$contestId, language=$language, codeLength=${code.length}" }
 
         val user = userRepository.findById(userId)
-            ?: throw BusinessException(SubmissionError.USER_NOT_FOUND)
+            ?: throw BusinessException(UserError.NotFound)
 
         val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(SubmissionError.PROBLEM_NOT_FOUND)
+            ?: throw BusinessException(ProblemError.NotFound)
 
         if (!problem.isPublic && problem.authorId != userId) {
             log.warn { "[Judge] Access denied: userId=$userId, problemId=$problemId, isPublic=${problem.isPublic}, authorId=${problem.authorId}" }
-            throw BusinessException(SubmissionError.PROBLEM_ACCESS_DENIED)
+            throw BusinessException(ProblemError.AccessDenied)
         }
 
         val contest = contestId?.let { id ->
             val c = contestRepository.findById(id)
-                ?: throw BusinessException(SubmissionError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
             val now = LocalDateTime.now()
-            if (now.isBefore(c.startAt)) throw BusinessException(SubmissionError.CONTEST_NOT_STARTED)
-            if (now.isAfter(c.endAt)) throw BusinessException(SubmissionError.CONTEST_ENDED)
+            if (now.isBefore(c.startAt)) throw BusinessException(ContestError.NotStarted)
+            if (now.isAfter(c.endAt)) throw BusinessException(ContestError.Ended)
             if (!contestParticipantRepository.existsByContestIdAndUserId(id, userId)) {
-                throw BusinessException(SubmissionError.NOT_PARTICIPATING)
+                throw BusinessException(ContestError.NotParticipating)
             }
             c
         }

@@ -6,6 +6,7 @@ import kr.solve.domain.problem.domain.repository.ProblemRepository
 import kr.solve.domain.user.domain.repository.UserRepository
 import kr.solve.domain.workbook.domain.entity.Workbook
 import kr.solve.domain.workbook.domain.entity.WorkbookProblem
+import kr.solve.domain.user.domain.error.UserError
 import kr.solve.domain.workbook.domain.error.WorkbookError
 import kr.solve.domain.workbook.domain.repository.WorkbookProblemRepository
 import kr.solve.domain.workbook.domain.repository.WorkbookRepository
@@ -42,11 +43,11 @@ class AdminWorkbookService(
     suspend fun getWorkbook(workbookId: Long): AdminWorkbookResponse.Detail {
         val workbook =
             workbookRepository.findById(workbookId)
-                ?: throw BusinessException(WorkbookError.NOT_FOUND)
+                ?: throw BusinessException(WorkbookError.NotFound)
 
         val author =
             userRepository.findById(workbook.authorId)
-                ?: throw BusinessException(WorkbookError.AUTHOR_NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val workbookProblems = workbookProblemRepository.findAllByWorkbookIdOrderByOrder(workbookId).toList()
         val problemMap = problemRepository.findAllByIdIn(workbookProblems.map { it.problemId }).toList().associateBy { it.id!! }
         val problems =
@@ -82,7 +83,7 @@ class AdminWorkbookService(
     ) {
         val workbook =
             workbookRepository.findById(workbookId)
-                ?: throw BusinessException(WorkbookError.NOT_FOUND)
+                ?: throw BusinessException(WorkbookError.NotFound)
 
         workbookRepository.save(
             workbook.copy(
@@ -103,7 +104,7 @@ class AdminWorkbookService(
     suspend fun deleteWorkbook(workbookId: Long) {
         val workbook =
             workbookRepository.findById(workbookId)
-                ?: throw BusinessException(WorkbookError.NOT_FOUND)
+                ?: throw BusinessException(WorkbookError.NotFound)
 
         workbookProblemRepository.deleteAllByWorkbookId(workbookId)
         workbookRepository.delete(workbook)

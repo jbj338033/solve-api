@@ -16,11 +16,11 @@ class FileService(
         val fileType = request.type
 
         if (request.contentType !in fileType.contentTypes) {
-            throw BusinessException(FileError.INVALID_CONTENT_TYPE)
+            throw BusinessException(FileError.InvalidContentType)
         }
 
         if (request.size > fileType.maxSize) {
-            throw BusinessException(FileError.FILE_TOO_LARGE)
+            throw BusinessException(FileError.FileTooLarge)
         }
 
         val extension = getExtension(request.contentType)

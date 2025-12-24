@@ -50,11 +50,11 @@ class GitHubOAuthClient(
                     ),
                 ).retrieve()
                 .onStatus(HttpStatusCode::isError) {
-                    Mono.error(BusinessException(AuthError.OAUTH_FAILED, "GitHub"))
+                    Mono.error(BusinessException(AuthError.OAuthFailed("GitHub")))
                 }.awaitBody<GitHubTokenResponse>()
 
         if (response.accessToken == null) {
-            throw BusinessException(AuthError.OAUTH_FAILED, "GitHub")
+            throw BusinessException(AuthError.OAuthFailed("GitHub"))
         }
 
         return response.accessToken
@@ -68,7 +68,7 @@ class GitHubOAuthClient(
                 .header("Authorization", "Bearer $accessToken")
                 .retrieve()
                 .onStatus(HttpStatusCode::isError) {
-                    Mono.error(BusinessException(AuthError.OAUTH_FAILED, "GitHub"))
+                    Mono.error(BusinessException(AuthError.OAuthFailed("GitHub")))
                 }.awaitBody<GitHubUserResponse>()
 
         val email = userResponse.email ?: fetchPrimaryEmail(accessToken)
@@ -90,12 +90,12 @@ class GitHubOAuthClient(
                 .header("Authorization", "Bearer $accessToken")
                 .retrieve()
                 .onStatus(HttpStatusCode::isError) {
-                    Mono.error(BusinessException(AuthError.OAUTH_FAILED, "GitHub"))
+                    Mono.error(BusinessException(AuthError.OAuthFailed("GitHub")))
                 }.awaitBody<List<GitHubEmailResponse>>()
 
         return emails.firstOrNull { it.primary }?.email
             ?: emails.firstOrNull()?.email
-            ?: throw BusinessException(AuthError.OAUTH_FAILED, "GitHub - no email")
+            ?: throw BusinessException(AuthError.OAuthFailed("GitHub - no email"))
     }
 }
 

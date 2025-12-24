@@ -35,13 +35,13 @@ class AuthService(
         provider: UserOAuthProvider,
         request: OAuthLoginRequest,
     ): LoginResponse {
-        val client = oauthClients[provider] ?: throw BusinessException(AuthError.UNSUPPORTED_PROVIDER)
+        val client = oauthClients[provider] ?: throw BusinessException(AuthError.UnsupportedProvider)
         val info = client.getUserInfo(request.credential)
 
         val oauth = userOAuthRepository.findByProviderAndProviderId(provider, info.providerId)
         val user =
             if (oauth != null) {
-                userRepository.findById(oauth.userId) ?: throw BusinessException(UserError.NOT_FOUND)
+                userRepository.findById(oauth.userId) ?: throw BusinessException(UserError.NotFound)
             } else {
                 register(provider, info)
             }
@@ -58,16 +58,16 @@ class AuthService(
         val token = request.refreshToken
 
         if (!jwtProvider.validateToken(token) || jwtProvider.getType(token) != JwtType.REFRESH) {
-            throw BusinessException(AuthError.INVALID_REFRESH_TOKEN)
+            throw BusinessException(AuthError.InvalidRefreshToken)
         }
 
         val userId =
             refreshTokenRepository.findUserIdByToken(token)
-                ?: throw BusinessException(AuthError.INVALID_REFRESH_TOKEN)
+                ?: throw BusinessException(AuthError.InvalidRefreshToken)
 
         val user =
             userRepository.findById(userId)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
 
         refreshTokenRepository.deleteByToken(token)
 

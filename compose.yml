@@ -20,7 +20,7 @@ services:
       - "6379:6379"
 
   worker:
-    image: ghcr.io/jbj338033/solve-worker:latest
+    build: ghcr.io/jbj338033/solve-worker:latest
     platform: linux/amd64
     container_name: solve-worker
     privileged: true
@@ -28,7 +28,7 @@ services:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     environment:
-      RUST_LOG: info
+      RUST_LOG: debug
       REDIS_URL: redis://redis/
       MAX_BOXES: 16
     depends_on:

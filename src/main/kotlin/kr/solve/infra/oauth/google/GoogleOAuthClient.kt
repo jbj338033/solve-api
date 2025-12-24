@@ -36,12 +36,12 @@ class GoogleOAuthClient(
                 .onStatus(HttpStatusCode::isError) { response ->
                     response.bodyToMono<String>().flatMap { body ->
                         logger.error { "Google OAuth failed: ${response.statusCode()} - $body" }
-                        Mono.error(BusinessException(AuthError.OAUTH_FAILED, "Google"))
+                        Mono.error(BusinessException(AuthError.OAuthFailed("Google")))
                     }
                 }.awaitBody<GoogleTokenInfoResponse>()
 
         if (tokenInfo.aud != oAuthProperties.google.clientId) {
-            throw BusinessException(AuthError.OAUTH_FAILED, "Google - invalid audience")
+            throw BusinessException(AuthError.OAuthFailed("Google - invalid audience"))
         }
 
         return OAuthUserInfo(

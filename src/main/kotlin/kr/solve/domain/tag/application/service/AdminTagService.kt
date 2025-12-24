@@ -20,7 +20,7 @@ class AdminTagService(
     @Transactional
     suspend fun createTag(name: String) {
         if (tagRepository.existsByName(name)) {
-            throw BusinessException(TagError.DUPLICATE, name)
+            throw BusinessException(TagError.Duplicate(name))
         }
         tagRepository.save(Tag(name = name))
     }
@@ -32,10 +32,10 @@ class AdminTagService(
     ) {
         val tag =
             tagRepository.findById(tagId)
-                ?: throw BusinessException(TagError.NOT_FOUND)
+                ?: throw BusinessException(TagError.NotFound)
 
         if (tag.name != name && tagRepository.existsByName(name)) {
-            throw BusinessException(TagError.DUPLICATE, name)
+            throw BusinessException(TagError.Duplicate(name))
         }
 
         tagRepository.save(tag.copy(name = name))
@@ -45,7 +45,7 @@ class AdminTagService(
     suspend fun deleteTag(tagId: Long) {
         val tag =
             tagRepository.findById(tagId)
-                ?: throw BusinessException(TagError.NOT_FOUND)
+                ?: throw BusinessException(TagError.NotFound)
         tagRepository.delete(tag)
     }
 }

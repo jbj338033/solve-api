@@ -5,7 +5,7 @@ import kr.solve.domain.auth.domain.error.AuthError
 import kr.solve.global.error.BusinessException
 import org.springframework.security.core.context.ReactiveSecurityContextHolder
 
-suspend fun userId(): Long = userIdOrNull() ?: throw BusinessException(AuthError.INVALID_TOKEN)
+suspend fun userId(): Long = userIdOrNull() ?: throw BusinessException(AuthError.InvalidToken)
 
 suspend fun userIdOrNull(): Long? =
     ReactiveSecurityContextHolder

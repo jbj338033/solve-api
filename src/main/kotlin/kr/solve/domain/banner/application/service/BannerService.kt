@@ -41,15 +41,15 @@ class BannerService(
 
         val banner =
             bannerRepository.findById(bannerId)
-                ?: throw BusinessException(BannerError.NOT_FOUND)
+                ?: throw BusinessException(BannerError.NotFound)
 
         if (!userBannerRepository.existsByUserIdAndBannerId(userId, bannerId)) {
-            throw BusinessException(BannerError.NOT_ACQUIRED)
+            throw BusinessException(BannerError.NotAcquired)
         }
 
         val user =
             userRepository.findById(userId)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
 
         userRepository.save(user.copy(selectedBannerId = bannerId))
 

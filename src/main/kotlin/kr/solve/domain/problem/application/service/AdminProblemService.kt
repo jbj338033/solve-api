@@ -6,7 +6,9 @@ import kr.solve.common.pagination.CursorPage
 import kr.solve.domain.problem.domain.entity.Problem
 import kr.solve.domain.problem.domain.entity.ProblemExample
 import kr.solve.domain.problem.domain.entity.ProblemTestCase
+import kr.solve.domain.problem.domain.enums.ProblemStatus
 import kr.solve.domain.problem.domain.error.ProblemError
+import kr.solve.domain.user.domain.error.UserError
 import kr.solve.domain.problem.domain.repository.ProblemExampleRepository
 import kr.solve.domain.problem.domain.repository.ProblemRepository
 import kr.solve.domain.problem.domain.repository.ProblemTagRepository
@@ -50,11 +52,11 @@ class AdminProblemService(
     suspend fun getProblem(problemId: Long): AdminProblemResponse.Detail {
         val problem =
             problemRepository.findById(problemId)
-                ?: throw BusinessException(ProblemError.NOT_FOUND)
+                ?: throw BusinessException(ProblemError.NotFound)
 
         val author =
             userRepository.findById(problem.authorId)
-                ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id!!).toList()
         val testcases = problemTestCaseRepository.findAllByProblemIdOrderByOrder(problem.id!!).toList()
         val tags = getTagsByProblemId(problem.id!!)
@@ -101,7 +103,7 @@ class AdminProblemService(
     ) {
         val problem =
             problemRepository.findById(problemId)
-                ?: throw BusinessException(ProblemError.NOT_FOUND)
+                ?: throw BusinessException(ProblemError.NotFound)
 
         problemRepository.save(
             problem.copy(
@@ -141,12 +143,39 @@ class AdminProblemService(
     suspend fun deleteProblem(problemId: Long) {
         val problem =
             problemRepository.findById(problemId)
-                ?: throw BusinessException(ProblemError.NOT_FOUND)
+                ?: throw BusinessException(ProblemError.NotFound)
 
         problemExampleRepository.deleteAllByProblemId(problemId)
         problemTestCaseRepository.deleteAllByProblemId(problemId)
         problemTagRepository.deleteAllByProblemId(problemId)
         problemRepository.delete(problem)
+    }
+
+    @Transactional
+    suspend fun approveProblem(problemId: Long) {
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ProblemError.NotFound)
+
+        if (problem.status != ProblemStatus.PENDING) {
+            throw BusinessException(ProblemError.CannotApprove)
+        }
+
+        problemRepository.save(problem.copy(status = ProblemStatus.APPROVED))
+    }
+
+    @Transactional
+    suspend fun rejectProblem(problemId: Long, reason: String) {
+        val problem =
+            problemRepository.findById(problemId)
+                ?: throw BusinessException(ProblemError.NotFound)
+
+        if (problem.status != ProblemStatus.PENDING) {
+            throw BusinessException(ProblemError.CannotReject)
+        }
+
+        problemRepository.save(problem.copy(status = ProblemStatus.REJECTED))
+        // TODO: reason을 저장하는 로직 추가 필요 (예: 알림 발송, 반려 사유 저장 등)
     }
 
     private suspend fun saveExamples(

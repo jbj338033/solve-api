@@ -48,6 +48,10 @@ class ProblemController(
         sort = sort,
     )
 
+    @Operation(summary = "내 문제 목록 조회", security = [SecurityRequirement(name = "bearerAuth")])
+    @GetMapping("/my")
+    suspend fun getMyProblems() = problemService.getMyProblems()
+
     @Operation(summary = "문제 상세 조회")
     @GetMapping("/{problemId}")
     suspend fun getProblem(
@@ -74,4 +78,11 @@ class ProblemController(
     suspend fun deleteProblem(
         @PathVariable problemId: Long,
     ) = problemService.deleteProblem(problemId)
+
+    @Operation(summary = "문제 검수 요청", security = [SecurityRequirement(name = "bearerAuth")])
+    @PostMapping("/{problemId}/submit")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun submitProblem(
+        @PathVariable problemId: Long,
+    ) = problemService.submitProblem(problemId)
 }

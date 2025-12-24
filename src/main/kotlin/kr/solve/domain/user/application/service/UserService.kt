@@ -49,7 +49,7 @@ class UserService(
         val userId = userId()
         val user =
             userRepository.findById(userId)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val providers = userOAuthRepository.findAllByUserId(userId).map { it.provider }
         return user.toMe(providers)
     }
@@ -57,7 +57,7 @@ class UserService(
     suspend fun getProfile(username: String): UserResponse.Profile {
         val user =
             userRepository.findByUsername(username)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val banner = user.selectedBannerId?.let { bannerRepository.findById(it) }
         val settings = userSettingsRepository.findById(user.id!!)
         return user.toProfile(banner, settings)
@@ -81,19 +81,19 @@ class UserService(
         request: OAuthLinkRequest,
     ): UserResponse.Me {
         val userId = userId()
-        val client = oauthClients[provider] ?: throw BusinessException(AuthError.UNSUPPORTED_PROVIDER)
+        val client = oauthClients[provider] ?: throw BusinessException(AuthError.UnsupportedProvider)
         val info = client.getUserInfo(request.credential)
 
         val existing = userOAuthRepository.findByProviderAndProviderId(provider, info.providerId)
         if (existing != null) {
-            throw BusinessException(UserError.OAUTH_ALREADY_LINKED)
+            throw BusinessException(UserError.OAuthAlreadyLinked)
         }
 
         userOAuthRepository.save(UserOAuth(userId = userId, provider = provider, providerId = info.providerId))
 
         val user =
             userRepository.findById(userId)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val providers = userOAuthRepository.findAllByUserId(userId).map { it.provider }
         return user.toMe(providers)
     }
@@ -103,14 +103,14 @@ class UserService(
         val userId = userId()
 
         if (userOAuthRepository.countByUserId(userId) <= 1) {
-            throw BusinessException(UserError.CANNOT_UNLINK_LAST_OAUTH)
+            throw BusinessException(UserError.CannotUnlinkLastOAuth)
         }
 
         userOAuthRepository.deleteByUserIdAndProvider(userId, provider)
 
         val user =
             userRepository.findById(userId)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val providers = userOAuthRepository.findAllByUserId(userId).map { it.provider }
         return user.toMe(providers)
     }
@@ -121,7 +121,7 @@ class UserService(
     ): List<UserResponse.Activity> {
         val user =
             userRepository.findByUsername(username)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
 
         val (startDate, endDate) =
             if (year != null) {
@@ -143,7 +143,7 @@ class UserService(
     ): List<UserResponse.RatingHistory> {
         val user =
             userRepository.findByUsername(username)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
 
         return userRatingHistoryRepository
             .findAllByUserIdAndRatingTypeOrderByRecordedAtDesc(user.id!!, type)
@@ -154,7 +154,7 @@ class UserService(
     suspend fun getStats(username: String): UserResponse.Stats {
         val user =
             userRepository.findByUsername(username)
-                ?: throw BusinessException(UserError.NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
 
         val solvedProblemIds = submissionRepository.findSolvedProblemIdsByUserId(user.id!!).toList()
         val submissionCount = submissionRepository.countByUserId(user.id!!)

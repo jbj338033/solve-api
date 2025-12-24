@@ -58,9 +58,9 @@ class JwtProvider(
         try {
             parser.parseSignedClaims(token).payload
         } catch (e: ExpiredJwtException) {
-            throw BusinessException(AuthError.EXPIRED_TOKEN)
+            throw BusinessException(AuthError.ExpiredToken)
         } catch (e: JwtException) {
-            throw BusinessException(AuthError.INVALID_TOKEN)
+            throw BusinessException(AuthError.InvalidToken)
         }
 
     enum class JwtType { ACCESS, REFRESH }

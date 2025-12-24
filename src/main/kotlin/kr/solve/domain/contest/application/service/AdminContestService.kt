@@ -39,7 +39,7 @@ class AdminContestService(
     suspend fun getContest(contestId: Long): AdminContestResponse.Detail {
         val contest =
             contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
 
         val contestProblems = contestProblemRepository.findAllByContestIdOrderByOrder(contestId).toList()
         val problemMap = problemRepository.findAllByIdIn(contestProblems.map { it.problemId }).toList().associateBy { it.id!! }
@@ -51,7 +51,7 @@ class AdminContestService(
     @Transactional
     suspend fun createContest(request: AdminCreateContestRequest) {
         if (request.endAt <= request.startAt) {
-            throw BusinessException(ContestError.INVALID_TIME_RANGE)
+            throw BusinessException(ContestError.InvalidTimeRange)
         }
 
         val contest =
@@ -81,12 +81,12 @@ class AdminContestService(
     ) {
         val contest =
             contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
 
         val startAt = request.startAt ?: contest.startAt
         val endAt = request.endAt ?: contest.endAt
         if (endAt <= startAt) {
-            throw BusinessException(ContestError.INVALID_TIME_RANGE)
+            throw BusinessException(ContestError.InvalidTimeRange)
         }
 
         val type = request.type ?: contest.type
@@ -121,7 +121,7 @@ class AdminContestService(
     suspend fun deleteContest(contestId: Long) {
         val contest =
             contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
 
         contestProblemRepository.deleteAllByContestId(contestId)
         contestParticipantRepository.deleteAllByContestId(contestId)

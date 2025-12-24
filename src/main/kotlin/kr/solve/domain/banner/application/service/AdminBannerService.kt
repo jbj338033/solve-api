@@ -22,7 +22,7 @@ class AdminBannerService(
     suspend fun getBanner(bannerId: Long): AdminBannerResponse {
         val banner =
             bannerRepository.findById(bannerId)
-                ?: throw BusinessException(BannerError.NOT_FOUND)
+                ?: throw BusinessException(BannerError.NotFound)
         return banner.toAdminResponse()
     }
 
@@ -44,7 +44,7 @@ class AdminBannerService(
     ) {
         val banner =
             bannerRepository.findById(bannerId)
-                ?: throw BusinessException(BannerError.NOT_FOUND)
+                ?: throw BusinessException(BannerError.NotFound)
 
         bannerRepository.save(
             banner.copy(
@@ -59,7 +59,7 @@ class AdminBannerService(
     suspend fun deleteBanner(bannerId: Long) {
         val banner =
             bannerRepository.findById(bannerId)
-                ?: throw BusinessException(BannerError.NOT_FOUND)
+                ?: throw BusinessException(BannerError.NotFound)
         bannerRepository.delete(banner)
     }
 }

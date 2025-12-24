@@ -45,7 +45,7 @@ class ContestService(
     suspend fun getContest(contestId: Long): ContestResponse.Detail {
         val contest =
             contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
 
         val isStarted = LocalDateTime.now() >= contest.startAt
         val contestProblems =
@@ -69,12 +69,12 @@ class ContestService(
     @Transactional
     suspend fun createContest(request: CreateContestRequest) {
         if (request.endAt <= request.startAt) {
-            throw BusinessException(ContestError.INVALID_TIME_RANGE)
+            throw BusinessException(ContestError.InvalidTimeRange)
         }
 
         val user = userRepository.findById(userId())
         if (request.isRated && user?.role != UserRole.ADMIN) {
-            throw BusinessException(ContestError.RATED_CONTEST_FORBIDDEN)
+            throw BusinessException(ContestError.RatedContestForbidden)
         }
 
         val contest =
@@ -113,16 +113,16 @@ class ContestService(
     ) {
         val contest =
             contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
 
         if (contest.hostId != userId()) {
-            throw BusinessException(ContestError.FORBIDDEN)
+            throw BusinessException(ContestError.Forbidden)
         }
 
         val startAt = request.startAt ?: contest.startAt
         val endAt = request.endAt ?: contest.endAt
         if (endAt <= startAt) {
-            throw BusinessException(ContestError.INVALID_TIME_RANGE)
+            throw BusinessException(ContestError.InvalidTimeRange)
         }
 
         val type = request.type ?: contest.type
@@ -166,10 +166,10 @@ class ContestService(
     suspend fun deleteContest(contestId: Long) {
         val contest =
             contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
 
         if (contest.hostId != userId()) {
-            throw BusinessException(ContestError.FORBIDDEN)
+            throw BusinessException(ContestError.Forbidden)
         }
 
         contestProblemRepository.deleteAllByContestId(contestId)
@@ -183,16 +183,16 @@ class ContestService(
     ) {
         val contest =
             contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
 
         val userId = userId()
 
         if (contest.type == ContestType.PRIVATE && request.inviteCode != contest.inviteCode) {
-            throw BusinessException(ContestError.INVALID_INVITE_CODE)
+            throw BusinessException(ContestError.InvalidInviteCode)
         }
 
         if (contestParticipantRepository.existsByContestIdAndUserId(contest.id!!, userId)) {
-            throw BusinessException(ContestError.ALREADY_PARTICIPATING)
+            throw BusinessException(ContestError.AlreadyParticipating)
         }
 
         contestParticipantRepository.save(ContestParticipant(contestId = contest.id!!, userId = userId))
@@ -202,12 +202,12 @@ class ContestService(
     suspend fun leaveContest(contestId: Long) {
         val contest =
             contestRepository.findById(contestId)
-                ?: throw BusinessException(ContestError.NOT_FOUND)
+                ?: throw BusinessException(ContestError.NotFound)
 
         val userId = userId()
 
         if (!contestParticipantRepository.existsByContestIdAndUserId(contest.id!!, userId)) {
-            throw BusinessException(ContestError.NOT_PARTICIPATING)
+            throw BusinessException(ContestError.NotParticipating)
         }
 
         contestParticipantRepository.deleteByContestIdAndUserId(contest.id!!, userId)

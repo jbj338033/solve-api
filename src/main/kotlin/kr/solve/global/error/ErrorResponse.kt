@@ -13,7 +13,7 @@ data class ErrorResponse(
         fun of(error: BaseError): ResponseEntity<ErrorResponse> {
             val response =
                 ErrorResponse(
-                    code = (error as Enum<*>).name,
+                    code = error.code,
                     status = error.status.value(),
                     message = error.message,
                 )

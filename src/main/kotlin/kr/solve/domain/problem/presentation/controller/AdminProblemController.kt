@@ -7,6 +7,7 @@ import jakarta.validation.Valid
 import kr.solve.domain.problem.application.service.AdminProblemService
 import kr.solve.domain.problem.presentation.request.AdminCreateProblemRequest
 import kr.solve.domain.problem.presentation.request.AdminUpdateProblemRequest
+import kr.solve.domain.problem.presentation.request.RejectProblemRequest
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -62,4 +63,19 @@ class AdminProblemController(
     suspend fun deleteProblem(
         @PathVariable problemId: Long,
     ) = adminProblemService.deleteProblem(problemId)
+
+    @Operation(summary = "문제 승인")
+    @PostMapping("/{problemId}/approve")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun approveProblem(
+        @PathVariable problemId: Long,
+    ) = adminProblemService.approveProblem(problemId)
+
+    @Operation(summary = "문제 반려")
+    @PostMapping("/{problemId}/reject")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    suspend fun rejectProblem(
+        @PathVariable problemId: Long,
+        @Valid @RequestBody request: RejectProblemRequest,
+    ) = adminProblemService.rejectProblem(problemId, request.reason)
 }

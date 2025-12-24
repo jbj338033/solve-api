@@ -6,6 +6,7 @@ import kr.solve.domain.problem.domain.repository.ProblemRepository
 import kr.solve.domain.user.domain.repository.UserRepository
 import kr.solve.domain.workbook.domain.entity.Workbook
 import kr.solve.domain.workbook.domain.entity.WorkbookProblem
+import kr.solve.domain.user.domain.error.UserError
 import kr.solve.domain.workbook.domain.error.WorkbookError
 import kr.solve.domain.workbook.domain.repository.WorkbookProblemRepository
 import kr.solve.domain.workbook.domain.repository.WorkbookRepository
@@ -42,11 +43,11 @@ class WorkbookService(
     suspend fun getWorkbook(workbookId: Long): WorkbookResponse.Detail {
         val workbook =
             workbookRepository.findById(workbookId)
-                ?: throw BusinessException(WorkbookError.NOT_FOUND)
+                ?: throw BusinessException(WorkbookError.NotFound)
 
         val author =
             userRepository.findById(workbook.authorId)
-                ?: throw BusinessException(WorkbookError.AUTHOR_NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val workbookProblems = workbookProblemRepository.findAllByWorkbookIdOrderByOrder(workbookId).toList()
         val problemMap = problemRepository.findAllByIdIn(workbookProblems.map { it.problemId }).toList().associateBy { it.id!! }
         val problems =
@@ -78,7 +79,7 @@ class WorkbookService(
     ) {
         val workbook =
             workbookRepository.findById(workbookId)
-                ?: throw BusinessException(WorkbookError.NOT_FOUND)
+                ?: throw BusinessException(WorkbookError.NotFound)
 
         validateOwner(workbook)
 
@@ -99,7 +100,7 @@ class WorkbookService(
     suspend fun deleteWorkbook(workbookId: Long) {
         val workbook =
             workbookRepository.findById(workbookId)
-                ?: throw BusinessException(WorkbookError.NOT_FOUND)
+                ?: throw BusinessException(WorkbookError.NotFound)
 
         validateOwner(workbook)
 
@@ -108,6 +109,6 @@ class WorkbookService(
     }
 
     private suspend fun validateOwner(workbook: Workbook) {
-        if (workbook.authorId != userId()) throw BusinessException(WorkbookError.ACCESS_DENIED)
+        if (workbook.authorId != userId()) throw BusinessException(WorkbookError.AccessDenied)
     }
 }

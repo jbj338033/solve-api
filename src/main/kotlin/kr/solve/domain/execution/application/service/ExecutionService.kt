@@ -28,7 +28,7 @@ class ExecutionService(
     ): Pair<UUID, Flow<ExecuteEvent>> {
         val problem =
             problemRepository.findById(problemId)
-                ?: throw BusinessException(ExecutionError.EXECUTION_UNAVAILABLE)
+                ?: throw BusinessException(ExecutionError.ExecutionUnavailable)
 
         val executionId = UUID.randomUUID()
         val request =

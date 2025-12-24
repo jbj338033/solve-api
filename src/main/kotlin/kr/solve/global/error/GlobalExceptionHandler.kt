@@ -17,12 +17,12 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleMethodArgumentNotValidException(exception: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
-        return ErrorResponse.of(CommonError.INVALID_REQUEST)
+        return ErrorResponse.of(CommonError.InvalidRequest)
     }
 
     @ExceptionHandler(Exception::class)
     fun handleException(exception: Exception): ResponseEntity<ErrorResponse> {
         logger.error(exception) { "Unhandled exception occurred" }
-        return ErrorResponse.of(CommonError.INTERNAL_SERVER_ERROR)
+        return ErrorResponse.of(CommonError.InternalServerError)
     }
 }

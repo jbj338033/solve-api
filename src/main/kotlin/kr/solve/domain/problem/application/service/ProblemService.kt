@@ -11,10 +11,12 @@ import kr.solve.domain.problem.domain.enums.ProblemStatus
 import kr.solve.domain.problem.domain.enums.ProblemType
 import kr.solve.domain.problem.domain.enums.SolveStatus
 import kr.solve.domain.problem.domain.error.ProblemError
+import kr.solve.domain.user.domain.error.UserError
 import kr.solve.domain.problem.domain.repository.ProblemExampleRepository
 import kr.solve.domain.problem.domain.repository.ProblemQueryRepository
 import kr.solve.domain.problem.domain.repository.ProblemRepository
 import kr.solve.domain.problem.domain.repository.ProblemTagRepository
+import kr.solve.domain.problem.domain.repository.ProblemTestCaseRepository
 import kr.solve.domain.problem.presentation.request.CreateProblemRequest
 import kr.solve.domain.problem.presentation.request.ExampleRequest
 import kr.solve.domain.problem.presentation.request.UpdateProblemRequest
@@ -36,6 +38,7 @@ class ProblemService(
     private val problemRepository: ProblemRepository,
     private val problemQueryRepository: ProblemQueryRepository,
     private val problemExampleRepository: ProblemExampleRepository,
+    private val problemTestCaseRepository: ProblemTestCaseRepository,
     private val problemTagRepository: ProblemTagRepository,
     private val tagRepository: TagRepository,
     private val userRepository: UserRepository,
@@ -87,9 +90,28 @@ class ProblemService(
 
     suspend fun getProblem(problemId: Long): ProblemResponse.Detail {
         val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+            ?: throw BusinessException(ProblemError.NotFound)
         if (problem.status != ProblemStatus.APPROVED || !problem.isPublic) {
-            throw BusinessException(ProblemError.ACCESS_DENIED)
+            throw BusinessException(ProblemError.AccessDenied)
+        }
+
+        return getProblemDetail(problem)
+    }
+
+    suspend fun getMyProblems(): List<ProblemResponse.Summary> {
+        val problems = problemRepository.findAllByAuthorId(userId()).toList()
+        val author = userRepository.findById(userId())
+            ?: throw BusinessException(UserError.NotFound)
+
+        return problems.map { it.toSummary(author) }
+    }
+
+    suspend fun getMyProblem(problemId: Long): ProblemResponse.Detail {
+        val problem = problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NotFound)
+
+        if (problem.authorId != userId()) {
+            throw BusinessException(ProblemError.AccessDenied)
         }
 
         return getProblemDetail(problem)
@@ -98,7 +120,7 @@ class ProblemService(
     private suspend fun getProblemDetail(problem: Problem): ProblemResponse.Detail {
         val author =
             userRepository.findById(problem.authorId)
-                ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id!!).toList()
         val tags = getTagsByProblemId(problem.id!!)
         val status = userIdOrNull()?.let { userId ->
@@ -144,7 +166,7 @@ class ProblemService(
 
         val author =
             userRepository.findById(problem.authorId)
-                ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(problem.id!!).toList()
         val tags = getTagsByProblemId(problem.id!!)
 
@@ -161,8 +183,9 @@ class ProblemService(
         request: UpdateProblemRequest,
     ): ProblemResponse.Detail {
         val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+            ?: throw BusinessException(ProblemError.NotFound)
         validateOwner(problem)
+        validateEditable(problem)
 
         val updated =
             problemRepository.save(
@@ -195,7 +218,7 @@ class ProblemService(
 
         val author =
             userRepository.findById(updated.authorId)
-                ?: throw BusinessException(ProblemError.AUTHOR_NOT_FOUND)
+                ?: throw BusinessException(UserError.NotFound)
         val examples = problemExampleRepository.findAllByProblemIdOrderByOrder(updated.id!!).toList()
         val tags = getTagsByProblemId(updated.id!!)
 
@@ -209,15 +232,49 @@ class ProblemService(
     @Transactional
     suspend fun deleteProblem(problemId: Long) {
         val problem = problemRepository.findById(problemId)
-            ?: throw BusinessException(ProblemError.NOT_FOUND)
+            ?: throw BusinessException(ProblemError.NotFound)
         validateOwner(problem)
+        validateDeletable(problem)
         problemExampleRepository.deleteAllByProblemId(problem.id!!)
         problemTagRepository.deleteAllByProblemId(problem.id!!)
         problemRepository.delete(problem)
     }
 
+    @Transactional
+    suspend fun submitProblem(problemId: Long) {
+        val problem = problemRepository.findById(problemId)
+            ?: throw BusinessException(ProblemError.NotFound)
+        validateOwner(problem)
+        validateSubmittable(problem)
+
+        val testCaseCount = problemTestCaseRepository.countByProblemId(problemId)
+        if (testCaseCount < 2) {
+            throw BusinessException(ProblemError.InsufficientTestCases)
+        }
+
+        problemRepository.save(problem.copy(status = ProblemStatus.PENDING))
+    }
+
     private suspend fun validateOwner(problem: Problem) {
-        if (problem.authorId != userId()) throw BusinessException(ProblemError.ACCESS_DENIED)
+        if (problem.authorId != userId()) throw BusinessException(ProblemError.AccessDenied)
+    }
+
+    private fun validateEditable(problem: Problem) {
+        if (problem.status != ProblemStatus.DRAFT && problem.status != ProblemStatus.REJECTED) {
+            throw BusinessException(ProblemError.CannotEdit)
+        }
+    }
+
+    private fun validateDeletable(problem: Problem) {
+        if (problem.status != ProblemStatus.DRAFT && problem.status != ProblemStatus.REJECTED) {
+            throw BusinessException(ProblemError.CannotDelete)
+        }
+    }
+
+    private fun validateSubmittable(problem: Problem) {
+        if (problem.status != ProblemStatus.DRAFT && problem.status != ProblemStatus.REJECTED) {
+            throw BusinessException(ProblemError.CannotSubmit)
+        }
     }
 
     private suspend fun saveExamples(
