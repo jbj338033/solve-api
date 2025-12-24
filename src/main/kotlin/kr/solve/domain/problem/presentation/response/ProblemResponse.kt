@@ -51,6 +51,9 @@ fun Problem.toDetail(
 )
 
 object ProblemResponse {
+    @Schema(name = "Problem.Id", description = "문제 ID")
+    data class Id(val id: Long)
+
     @Schema(name = "Problem.Author", description = "문제 작성자 정보")
     data class Author(
         @Schema(description = "작성자 ID")
