@@ -5,6 +5,9 @@ import kr.solve.domain.review.domain.enums.ReviewStatus
 import java.time.LocalDateTime
 
 object ReviewResponse {
+    @Schema(name = "Review.Id", description = "리뷰 ID")
+    data class Id(val id: Long)
+
     @Schema(name = "Review.Author", description = "작성자 정보")
     data class Author(
         val id: Long,
